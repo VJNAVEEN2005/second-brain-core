@@ -1,7 +1,14 @@
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { SecondBrain } from './sdk/index.js';
 import { getDashboardHtml } from './ui/dashboard.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import {
   CreateWorkspaceInputSchema,
   CreateProjectInputSchema,
@@ -27,6 +34,23 @@ export async function buildServer(
 
   app.get('/ui', async (_req, reply) => {
     return reply.type('text/html').send(getDashboardHtml());
+  });
+
+  // Serve official logo asset
+  app.get('/assets/logo.png', async (_req, reply) => {
+    const candidatePaths = [
+      path.resolve(__dirname, '../assets/logo.png'),
+      path.resolve(__dirname, '../../assets/logo.png'),
+      path.resolve(process.cwd(), 'assets/logo.png'),
+      path.join(os.homedir(), '.second-brain', 'assets', 'logo.png'),
+    ];
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        const stream = fs.createReadStream(p);
+        return reply.type('image/png').send(stream);
+      }
+    }
+    return reply.status(404).send({ error: 'Logo not found' });
   });
 
   // Health check

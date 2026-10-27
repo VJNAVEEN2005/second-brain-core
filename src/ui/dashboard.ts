@@ -10,6 +10,7 @@ export function getDashboardHtml(): string {
   <script src="https://unpkg.com/three-spritetext@1.8.2/dist/three-spritetext.min.js"></script>
   <script src="https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" type="image/png" href="/assets/logo.png">
   <style>
     body { background-color: #f1f5f9; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; }
     .card-clean { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); }
@@ -22,9 +23,7 @@ export function getDashboardHtml(): string {
   <!-- Top Global Header -->
   <header class="bg-white px-7 py-3 flex items-center justify-between border-b border-slate-200/90 shadow-sm z-30">
     <div class="flex items-center space-x-3.5">
-      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-400 via-indigo-300 to-pink-300 flex items-center justify-center text-white font-bold text-xl shadow-sm">
-        🧠
-      </div>
+      <img src="/assets/logo.png" alt="Second Brain Core" class="w-10 h-10 rounded-2xl object-contain drop-shadow-sm border border-slate-200/80 bg-white p-0.5 hover:scale-105 transition transform" />
       <div>
         <div class="flex items-center gap-2">
           <h1 class="text-base font-bold tracking-tight text-slate-900">Second Brain Core</h1>
