@@ -1,6 +1,7 @@
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import { SecondBrain } from './sdk/index.js';
+import { getDashboardHtml } from './ui/dashboard.js';
 import {
   CreateWorkspaceInputSchema,
   CreateProjectInputSchema,
@@ -18,6 +19,15 @@ export async function buildServer(
   });
 
   await app.register(cors, { origin: true });
+
+  // Visual Dashboard Web UI
+  app.get('/', async (_req, reply) => {
+    return reply.type('text/html').send(getDashboardHtml());
+  });
+
+  app.get('/ui', async (_req, reply) => {
+    return reply.type('text/html').send(getDashboardHtml());
+  });
 
   // Health check
   app.get('/health', async () => {

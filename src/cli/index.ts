@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { exec } from 'node:child_process';
 import { Command } from 'commander';
 import { SecondBrain } from '../sdk/index.js';
 import { LocalFileStorageAdapter } from '../db/local-file.adapter.js';
@@ -210,6 +211,99 @@ program
   .description('Run Model Context Protocol (MCP) server for Claude / Cursor / Antigravity')
   .action(async () => {
     await runMcpStdio(brain);
+  });
+
+// ==========================================
+// UI COMMAND (OPEN VISUAL DASHBOARD)
+// ==========================================
+program
+  .command('ui')
+  .description('Open interactive visual web dashboard in browser')
+  .option('-p, --port <number>', 'Port number', '3000')
+  .action(async (options) => {
+    const port = parseInt(options.port, 10);
+    const app = await buildServer(brain, { logger: false });
+    await app.listen({ port, host: '127.0.0.1' });
+    const url = `http://127.0.0.1:${port}`;
+    console.log(`\n🧠 Second Brain Visual Dashboard running at ${url}`);
+    console.log('   Opening in your default browser...\n');
+
+    const startCmd =
+      process.platform === 'win32'
+        ? `start ${url}`
+        : process.platform === 'darwin'
+        ? `open ${url}`
+        : `xdg-open ${url}`;
+    exec(startCmd);
+  });
+
+// ==========================================
+// LOG / TIMELINE COMMAND
+// ==========================================
+program
+  .command('log')
+  .description('Show chronological timeline of checkpoints')
+  .option('-p, --project <id>', 'Project ID')
+  .action(async (options) => {
+    try {
+      let projectId = options.project;
+      if (!projectId) {
+        const resume = await brain.resume();
+        projectId = resume.projectId;
+      }
+
+      const checkpoints = await brain.listCheckpoints(projectId);
+      if (checkpoints.length === 0) {
+        console.log('\nNo checkpoints found for this project.\n');
+        return;
+      }
+
+      console.log(`\n📜 CHECKPOINT TIMELINE (${checkpoints.length} Snapshots)`);
+      console.log('────────────────────────────────────────────────');
+      for (const c of checkpoints) {
+        const date = new Date(c.createdAt).toLocaleString();
+        console.log(`🔷 [${c.checkpointId}] ${date}`);
+        console.log(`   Progress: ${c.progress}% | Reason: ${c.stopReason}`);
+        console.log(`   Summary:  ${c.summary}`);
+        if (c.currentTask) console.log(`   Task:     ${c.currentTask} ──► ${c.nextTask}`);
+        if (c.decisions && c.decisions.length > 0) {
+          console.log(`   Decisions: ${c.decisions.join('; ')}`);
+        }
+        if (c.blockers && c.blockers.length > 0) {
+          console.log(`   Blockers:  ${c.blockers.join('; ')}`);
+        }
+        console.log('────────────────────────────────────────────────');
+      }
+      console.log('');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Error: ${msg}`);
+    }
+  });
+
+// ==========================================
+// GRAPH COMMAND
+// ==========================================
+program
+  .command('graph')
+  .description('Display cognitive knowledge graph')
+  .option('-p, --project <id>', 'Project ID')
+  .option('-d, --depth <number>', 'Graph traversal depth', '2')
+  .action(async (options) => {
+    try {
+      let projectId = options.project;
+      if (!projectId) {
+        const resume = await brain.resume();
+        projectId = resume.projectId;
+      }
+
+      const depth = parseInt(options.depth, 10);
+      const graphContext = await brain.getGraphContext(projectId, depth);
+      console.log('\n' + brain.graph.formatContextForPrompt(graphContext) + '\n');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Error: ${msg}`);
+    }
   });
 
 // Default action: if no args, show status or help
