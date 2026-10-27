@@ -1,352 +1,529 @@
 export function getDashboardHtml(): string {
   return `<!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Second Brain Core — 3D Cognitive Universe</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/3d-force-graph"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: '#6366f1',
-            accent: '#10b981',
-          }
-        }
-      }
-    }
-  </script>
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three-spritetext@1.8.2/dist/three-spritetext.min.js"></script>
+  <script src="https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { background-color: #080c14; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
-    .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.08); }
-    .badge-limit { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-    .badge-completed { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .badge-user { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
-    #graph3d-canvas canvas { outline: none; }
+    body { background-color: #f1f5f9; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; }
+    .card-clean { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); }
+    .canvas-container canvas { outline: none; border-radius: 1rem; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
-  <!-- Top Navigation -->
-  <header class="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-gray-800/80">
-    <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/30">
+<body class="min-h-screen flex flex-col bg-[#eef2f6]">
+  <!-- Top Global Header -->
+  <header class="bg-white px-7 py-3 flex items-center justify-between border-b border-slate-200/90 shadow-sm z-30">
+    <div class="flex items-center space-x-3.5">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-400 via-indigo-300 to-pink-300 flex items-center justify-center text-white font-bold text-xl shadow-sm">
         🧠
       </div>
       <div>
-        <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-          Second Brain Core
-          <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Local Node</span>
-        </h1>
-        <p class="text-xs text-gray-400">Universal Memory Layer for AI Systems</p>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold tracking-tight text-slate-900">Second Brain Core</h1>
+          <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Local Node
+          </span>
+        </div>
+        <p class="text-xs text-slate-500 font-medium">Universal Memory Layer for AI Systems</p>
       </div>
     </div>
+
+    <!-- Header Actions -->
     <div class="flex items-center space-x-3">
-      <button onclick="toggle3DView()" id="btnToggle3D" class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-xs font-bold text-white transition flex items-center gap-2 shadow-md shadow-cyan-500/30">
-        <i class="fa-solid fa-cube"></i> <span id="toggleText">View in 3D Universe</span>
+      <button onclick="toggleDashboardMode()" id="btnModeToggle" class="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 text-xs font-semibold transition flex items-center gap-2 shadow-xs">
+        <i class="fa-solid fa-house"></i> <span id="modeText">Back to 2D Dashboard</span>
       </button>
-      <button onclick="copyResumePrompt('Gemini')" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition flex items-center gap-1.5 shadow-md shadow-indigo-600/30">
+
+      <button onclick="copyResumePrompt('Gemini')" class="px-4 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-semibold transition flex items-center gap-2 shadow-xs">
         <i class="fa-solid fa-copy"></i> Copy Gemini Prompt
       </button>
-      <button onclick="copyResumePrompt('Claude')" class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-xs font-semibold text-white transition flex items-center gap-1.5 shadow-md shadow-purple-600/30">
+
+      <button onclick="copyResumePrompt('Claude')" class="px-4 py-2 rounded-xl bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 text-xs font-semibold transition flex items-center gap-2 shadow-xs">
         <i class="fa-solid fa-copy"></i> Copy Claude Prompt
       </button>
-      <button onclick="loadAllData()" class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs transition">
+
+      <button onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 flex items-center justify-center text-xs transition shadow-xs">
+        <i class="fa-regular fa-sun"></i>
+      </button>
+
+      <button onclick="refreshData()" class="w-9 h-9 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 flex items-center justify-center text-xs transition shadow-xs">
         <i class="fa-solid fa-rotate-right"></i>
       </button>
     </div>
   </header>
 
-  <!-- Fullscreen 3D Cosmos Modal View (hidden by default) -->
-  <div id="modal3D" class="hidden fixed inset-0 z-40 bg-black/90 flex flex-col pt-16">
-    <!-- 3D Header Overlay -->
-    <div class="absolute top-20 left-6 z-50 glass px-5 py-3 rounded-xl border border-gray-700/60 pointer-events-auto">
-      <h3 class="text-sm font-bold text-white flex items-center gap-2">
-        <span class="w-3 h-3 rounded-full bg-cyan-400 animate-pulse"></span>
-        3D Cognitive Universe
-      </h3>
-      <p class="text-xs text-gray-400 mt-0.5">Drag left click to rotate • Scroll to zoom • Right click to pan</p>
-      <div class="flex items-center gap-2 mt-3">
-        <button onclick="toggleOrbit()" id="btnOrbit" class="px-2.5 py-1 rounded bg-gray-800 hover:bg-gray-700 text-[11px] font-medium text-gray-300 border border-gray-700">
-          <i class="fa-solid fa-arrows-rotate"></i> Auto-Rotate: ON
+  <!-- Main 3-Column Layout -->
+  <div class="flex-1 flex gap-5 p-5 max-w-[1920px] w-full mx-auto overflow-hidden h-[calc(100vh-65px)]">
+    <!-- Column 1: Left Sidebar -->
+    <aside class="w-60 flex flex-col gap-4 flex-shrink-0">
+      <!-- Nav Menu Card -->
+      <div class="card-clean rounded-2xl p-3 flex flex-col gap-1">
+        <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50/90 text-blue-600 font-semibold text-xs border border-blue-100/80 transition text-left">
+          <i class="fa-solid fa-cube text-sm w-4 text-center"></i>
+          <span>Cognitive Universe</span>
         </button>
-        <button onclick="resetCamera()" class="px-2.5 py-1 rounded bg-gray-800 hover:bg-gray-700 text-[11px] font-medium text-gray-300 border border-gray-700">
-          <i class="fa-solid fa-crosshairs"></i> Reset View
+        <button onclick="filterByType('all')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium text-xs transition text-left">
+          <i class="fa-solid fa-layer-group text-sm w-4 text-center text-slate-400"></i>
+          <span>Nodes</span>
+        </button>
+        <button onclick="filterByType('Project')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium text-xs transition text-left">
+          <i class="fa-regular fa-folder text-sm w-4 text-center text-slate-400"></i>
+          <span>Projects</span>
+        </button>
+        <button onclick="focusSearch()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium text-xs transition text-left">
+          <i class="fa-solid fa-magnifying-glass text-sm w-4 text-center text-slate-400"></i>
+          <span>Search</span>
+        </button>
+        <button onclick="alert('Settings configured via brain CLI')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium text-xs transition text-left">
+          <i class="fa-solid fa-gear text-sm w-4 text-center text-slate-400"></i>
+          <span>Settings</span>
         </button>
       </div>
-    </div>
 
-    <!-- Node Color Legend Overlay -->
-    <div class="absolute bottom-6 left-6 z-50 glass px-4 py-3 rounded-xl border border-gray-800/80 pointer-events-auto text-xs space-y-1.5">
-      <div class="font-bold text-gray-300 pb-1 border-b border-gray-800">Node Types:</div>
-      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> User</div>
-      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Workspace</div>
-      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Project</div>
-      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> Checkpoint</div>
-      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Decision</div>
-      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span> Blocker / Task</div>
-    </div>
+      <!-- Node Types Card (Bottom Left) -->
+      <div class="card-clean rounded-2xl p-4 mt-auto">
+        <h4 class="text-xs font-bold text-slate-900 pb-2.5 border-b border-slate-100 flex items-center gap-2">
+          <i class="fa-solid fa-layer-group text-slate-400"></i> Node Types
+        </h4>
+        <div class="space-y-2.5 mt-3 text-xs font-medium text-slate-700">
+          <div class="flex items-center gap-2.5 cursor-pointer hover:text-slate-900" onclick="filterByType('User')">
+            <span class="w-3 h-3 rounded-full bg-purple-500 shadow-xs"></span> User
+          </div>
+          <div class="flex items-center gap-2.5 cursor-pointer hover:text-slate-900" onclick="filterByType('Workspace')">
+            <span class="w-3 h-3 rounded-full bg-blue-500 shadow-xs"></span> Workspace
+          </div>
+          <div class="flex items-center gap-2.5 cursor-pointer hover:text-slate-900" onclick="filterByType('Project')">
+            <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-xs"></span> Project
+          </div>
+          <div class="flex items-center gap-2.5 cursor-pointer hover:text-slate-900" onclick="filterByType('Checkpoint')">
+            <span class="w-3 h-3 rounded-full bg-cyan-400 shadow-xs"></span> Checkpoint
+          </div>
+          <div class="flex items-center gap-2.5 cursor-pointer hover:text-slate-900" onclick="filterByType('Decision')">
+            <span class="w-3 h-3 rounded-full bg-amber-400 shadow-xs"></span> Decision
+          </div>
+          <div class="flex items-center gap-2.5 cursor-pointer hover:text-slate-900" onclick="filterByType('Task')">
+            <span class="w-3 h-3 rounded-full bg-rose-500 shadow-xs"></span> Blocker / Task
+          </div>
+        </div>
+      </div>
+    </aside>
 
-    <!-- 3D Canvas Mount Point -->
-    <div id="graph3d-canvas" class="w-full flex-1 relative"></div>
+    <!-- Column 2: Center Main Graph View -->
+    <main class="flex-1 card-clean rounded-2xl flex flex-col relative overflow-hidden">
+      <!-- Toolbar Header inside the Center Card -->
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between z-10 bg-white/90 backdrop-blur-sm">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-cube"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 leading-tight">3D Cognitive Universe</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Drag to rotate • Scroll to zoom • Right click to pan</p>
+          </div>
+        </div>
+
+        <!-- Toolbar Buttons -->
+        <div class="flex items-center gap-2.5">
+          <button onclick="toggleAutoRotate()" id="btnAutoRotate" class="px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 text-xs font-semibold flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-play text-[11px]"></i> Auto-Rotate
+          </button>
+          <button onclick="resetCamera()" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-rotate-left text-[11px]"></i> Reset View
+          </button>
+          <button onclick="fitView()" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-expand text-[11px]"></i> Fit View
+          </button>
+          <button onclick="alert('Second Brain Core v0.1.0 (Local)')" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-ellipsis"></i> More
+          </button>
+        </div>
+      </div>
+
+      <!-- 3D WebGL Canvas Mount -->
+      <div id="graph3d-canvas" class="flex-1 w-full h-full relative z-0"></div>
+    </main>
+
+    <!-- Column 3: Right Inspector Panel (Node Details) -->
+    <aside id="inspectorPanel" class="w-80 card-clean rounded-2xl p-5 flex flex-col gap-4 flex-shrink-0 overflow-y-auto">
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2 text-xs font-bold text-slate-900">
+          <i class="fa-solid fa-file-lines text-blue-600"></i> Node Details
+        </div>
+        <button onclick="closeInspector()" class="text-slate-400 hover:text-slate-600 text-sm">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Avatar & Title with Edit Button -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div id="insAvatar" class="w-12 h-12 rounded-full bg-blue-500 shadow-md shadow-blue-200 flex items-center justify-center text-white text-lg">
+            <i class="fa-regular fa-folder"></i>
+          </div>
+          <div>
+            <h4 id="insTitle" class="text-sm font-bold text-slate-900 leading-tight">Workspace</h4>
+            <p id="insSubtitle" class="text-[11px] text-slate-500 font-medium">Workspace Node</p>
+          </div>
+        </div>
+        <button onclick="alert('Node details are managed automatically by Second Brain')" class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-[11px] font-semibold flex items-center gap-1 border border-blue-100">
+          <i class="fa-solid fa-pen text-[9px]"></i> Edit
+        </button>
+      </div>
+
+      <!-- Metadata List -->
+      <div class="space-y-2 text-xs pt-1 border-t border-slate-100">
+        <div class="flex items-center justify-between py-1">
+          <span class="text-slate-500 flex items-center gap-2"><i class="fa-solid fa-fingerprint text-slate-400 w-3.5"></i> Node ID</span>
+          <span class="flex items-center gap-1.5 font-mono font-medium text-slate-800">
+            <span id="insId">WS_001</span>
+            <button onclick="copyNodeId()" class="text-slate-400 hover:text-slate-600"><i class="fa-regular fa-copy text-[11px]"></i></button>
+          </span>
+        </div>
+        <div class="flex items-center justify-between py-1">
+          <span class="text-slate-500 flex items-center gap-2"><i class="fa-solid fa-shapes text-slate-400 w-3.5"></i> Type</span>
+          <span id="insType" class="font-medium text-slate-800 flex items-center gap-1.5">
+            <span id="insTypeDot" class="w-2 h-2 rounded-full bg-blue-500"></span> Workspace
+          </span>
+        </div>
+        <div class="flex items-center justify-between py-1">
+          <span class="text-slate-500 flex items-center gap-2"><i class="fa-solid fa-network-wired text-slate-400 w-3.5"></i> Connected Nodes</span>
+          <span id="insConnections" class="font-bold text-slate-800">4</span>
+        </div>
+        <div class="flex items-center justify-between py-1">
+          <span class="text-slate-500 flex items-center gap-2"><i class="fa-regular fa-calendar text-slate-400 w-3.5"></i> Created</span>
+          <span id="insCreated" class="font-medium text-slate-700">Oct 27, 2026 20:15</span>
+        </div>
+        <div class="flex items-center justify-between py-1">
+          <span class="text-slate-500 flex items-center gap-2"><i class="fa-regular fa-clock text-slate-400 w-3.5"></i> Last Updated</span>
+          <span id="insUpdated" class="font-medium text-slate-700">Oct 27, 2026 20:15</span>
+        </div>
+      </div>
+
+      <!-- Notes Section -->
+      <div class="space-y-1.5 pt-1 border-t border-slate-100">
+        <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+          <i class="fa-regular fa-file-lines text-slate-400"></i> Notes
+        </div>
+        <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 text-xs text-slate-600 leading-relaxed" id="insNotes">
+          Core workspace node. Connects projects, tasks and decisions.
+        </div>
+      </div>
+
+      <!-- Connected Nodes Section -->
+      <div class="space-y-2 pt-1 border-t border-slate-100">
+        <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+          <i class="fa-solid fa-network-wired text-slate-400"></i> Connected Nodes
+        </div>
+        <div id="insConnectedList" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- View Full Details Action Button -->
+      <button onclick="alert('Viewing comprehensive state for ' + document.getElementById('insId').textContent)" class="w-full py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 text-xs font-bold transition flex items-center justify-center gap-2 mt-auto">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> View full details →
+      </button>
+    </aside>
   </div>
 
-  <!-- Standard Dashboard Content -->
-  <main id="mainDashboard" class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
-    <!-- Active State Hero Card -->
-    <div id="activeProjectHero" class="glass rounded-2xl p-6 relative overflow-hidden">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div class="flex items-center gap-3">
-            <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Active Cognitive State</span>
-            <span id="heroStopReason" class="text-xs px-2.5 py-0.5 rounded-full badge-user font-medium">Checking...</span>
-          </div>
-          <h2 id="heroProjectName" class="text-3xl font-extrabold text-white mt-1">Loading Brain...</h2>
-          <p id="heroSummary" class="text-sm text-gray-400 mt-1 max-w-2xl">Retrieving latest cognitive state from disk...</p>
-        </div>
-        <div class="flex flex-col items-end">
-          <div class="text-3xl font-black text-emerald-400" id="heroProgress">0%</div>
-          <div class="w-48 bg-gray-800 rounded-full h-2.5 mt-2 overflow-hidden border border-gray-700">
-            <div id="heroProgressBar" class="bg-gradient-to-r from-indigo-500 to-emerald-400 h-2.5 rounded-full" style="width: 0%"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-800/80">
-        <div class="bg-gray-900/60 rounded-xl p-4 border border-gray-800">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-            <i class="fa-solid fa-bolt text-yellow-400"></i> Active Current Task
-          </div>
-          <p id="heroCurrentTask" class="text-sm font-medium text-white mt-1">None</p>
-        </div>
-        <div class="bg-gray-900/60 rounded-xl p-4 border border-gray-800">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-            <i class="fa-solid fa-arrow-right text-emerald-400"></i> Next Immediate Task
-          </div>
-          <p id="heroNextTask" class="text-sm font-medium text-white mt-1">None</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2 Column Layout: Checkpoint Timeline & Decisions/Blockers -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Checkpoint Timeline (Left 2 cols) -->
-      <div class="lg:col-span-2 glass rounded-2xl p-6 space-y-4">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i> Checkpoint History
-          </h3>
-          <span class="text-xs text-gray-400" id="checkpointCount">0 snapshots</span>
-        </div>
-        <div id="checkpointsTimeline" class="space-y-3 max-h-[480px] overflow-y-auto pr-2"></div>
-      </div>
-
-      <!-- Decisions & Blockers (Right 1 col) -->
-      <div class="space-y-6">
-        <!-- Key Decisions -->
-        <div class="glass rounded-2xl p-6 space-y-4">
-          <h3 class="text-lg font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-landmark text-amber-400"></i> Key Decisions
-          </h3>
-          <ul id="decisionsList" class="space-y-2 text-sm text-gray-300 max-h-48 overflow-y-auto">
-            <li class="text-gray-500 italic">No decisions recorded yet.</li>
-          </ul>
-        </div>
-
-        <!-- Active Blockers -->
-        <div class="glass rounded-2xl p-6 space-y-4">
-          <h3 class="text-lg font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-shield-halved text-rose-400"></i> Blockers & Issues
-          </h3>
-          <ul id="blockersList" class="space-y-2 text-sm text-gray-300 max-h-48 overflow-y-auto">
-            <li class="text-gray-500 italic">No active blockers. All clear!</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3D Preview Quick Banner -->
-    <div class="glass rounded-2xl p-6 flex items-center justify-between border border-cyan-500/20 bg-gradient-to-r from-cyan-950/20 to-blue-950/20">
-      <div>
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-cube text-cyan-400"></i> Explore your Cognitive Map in Full 3D Space
-        </h3>
-        <p class="text-xs text-gray-400 mt-1">Visualize how all your projects, checkpoints, tools, and decisions connect in a WebGL 3D cosmos.</p>
-      </div>
-      <button onclick="toggle3DView()" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-xs font-bold text-gray-950 transition shadow-lg shadow-cyan-500/20">
-        Launch 3D Universe
-      </button>
-    </div>
-  </main>
-
-  <footer class="glass border-t border-gray-800 py-4 px-6 text-center text-xs text-gray-500 mt-auto">
-    Second Brain Core • Running locally on your machine • Zero Cloud Dependency
-  </footer>
-
   <script>
-    let activeProjectId = '';
     let graph3DInstance = null;
-    let is3DActive = false;
     let isAutoRotating = true;
+    let graphData = { nodes: [], links: [] };
+    let activeProjectId = '';
 
-    async function loadAllData() {
+    const typeColors = {
+      User: '#8b5cf6',
+      Workspace: '#3b82f6',
+      Project: '#10b981',
+      Checkpoint: '#06b6d4',
+      Decision: '#f59e0b',
+      Task: '#f43f5e',
+    };
+
+    const typeIcons = {
+      User: 'fa-user',
+      Workspace: 'fa-folder',
+      Project: 'fa-folder-open',
+      Checkpoint: 'fa-flag',
+      Decision: 'fa-code-branch',
+      Task: 'fa-exclamation',
+    };
+
+    async function loadData() {
       try {
         const resumeRes = await fetch('/api/resume');
-        if (!resumeRes.ok) throw new Error('No active project');
-        const resume = await resumeRes.json();
-        activeProjectId = resume.projectId;
-
-        // Render Hero
-        document.getElementById('heroProjectName').textContent = resume.project;
-        document.getElementById('heroSummary').textContent = resume.summary;
-        document.getElementById('heroProgress').textContent = resume.completion + '%';
-        document.getElementById('heroProgressBar').style.width = resume.completion + '%';
-        document.getElementById('heroCurrentTask').textContent = resume.currentTask || 'None';
-        document.getElementById('heroNextTask').textContent = resume.nextTask || 'None';
-        
-        const stopReasonBadge = document.getElementById('heroStopReason');
-        stopReasonBadge.textContent = resume.stopReason;
-        if (resume.stopReason === 'LIMIT_REACHED') {
-          stopReasonBadge.className = 'text-xs px-2.5 py-0.5 rounded-full badge-limit font-medium';
-        } else if (resume.stopReason === 'COMPLETED') {
-          stopReasonBadge.className = 'text-xs px-2.5 py-0.5 rounded-full badge-completed font-medium';
-        } else {
-          stopReasonBadge.className = 'text-xs px-2.5 py-0.5 rounded-full badge-user font-medium';
+        if (resumeRes.ok) {
+          const resume = await resumeRes.json();
+          activeProjectId = resume.projectId;
         }
 
-        // Render Decisions
-        const decList = document.getElementById('decisionsList');
-        if (resume.decisions && resume.decisions.length > 0) {
-          decList.innerHTML = resume.decisions.map(d => 
-            \`<li class="flex items-start gap-2 bg-gray-900/50 p-2.5 rounded-lg border border-gray-800/80">
-              <span class="text-indigo-400 font-bold">•</span>
-              <span>\${d}</span>
-            </li>\`
-          ).join('');
-        } else {
-          decList.innerHTML = '<li class="text-gray-500 italic">No decisions recorded yet.</li>';
+        const graphRes = await fetch('/api/graph/3d');
+        if (graphRes.ok) {
+          graphData = await graphRes.json();
+          init3DGraph(graphData);
         }
-
-        // Render Blockers
-        const blkList = document.getElementById('blockersList');
-        if (resume.blockers && resume.blockers.length > 0) {
-          blkList.innerHTML = resume.blockers.map(b => 
-            \`<li class="flex items-start gap-2 bg-rose-950/20 p-2.5 rounded-lg border border-rose-900/30 text-rose-300">
-              <span class="text-rose-400 font-bold">⛔</span>
-              <span>\${b}</span>
-            </li>\`
-          ).join('');
-        } else {
-          blkList.innerHTML = '<li class="text-emerald-400 italic">No blockers! Progressing smoothly.</li>';
-        }
-
-        // Fetch checkpoints timeline
-        const chkRes = await fetch('/api/checkpoints/' + activeProjectId);
-        if (chkRes.ok) {
-          const checkpoints = await chkRes.json();
-          document.getElementById('checkpointCount').textContent = checkpoints.length + ' snapshots';
-          const timelineEl = document.getElementById('checkpointsTimeline');
-          timelineEl.innerHTML = checkpoints.map(c => \`
-            <div class="bg-gray-900/60 hover:bg-gray-900 transition p-4 rounded-xl border border-gray-800 space-y-2">
-              <div class="flex items-center justify-between text-xs text-gray-400">
-                <span class="font-mono text-indigo-400">\${c.checkpointId}</span>
-                <span>\${new Date(c.createdAt).toLocaleTimeString()} · \${new Date(c.createdAt).toLocaleDateString()}</span>
-              </div>
-              <p class="text-sm font-semibold text-white">\${c.summary}</p>
-              <div class="flex items-center gap-2 pt-1">
-                <span class="text-xs px-2 py-0.5 rounded bg-gray-800 text-gray-300">Progress: \${c.progress}%</span>
-                <span class="text-xs px-2 py-0.5 rounded bg-gray-800 text-gray-300">\${c.stopReason}</span>
-              </div>
-            </div>
-          \`).join('');
-        }
-
       } catch (err) {
-        document.getElementById('heroProjectName').textContent = 'No Active Project';
-        document.getElementById('heroSummary').textContent = 'Create a project using the CLI or MCP server to get started.';
+        console.error('Failed to load data:', err);
       }
     }
 
-    // ==========================================
-    // 3D FORCE GRAPH INITIALIZATION
-    // ==========================================
-    async function init3DGraph() {
-      if (graph3DInstance) return;
-
-      const res = await fetch('/api/graph/3d');
-      const data = await res.json();
+    function init3DGraph(data) {
+      if (graph3DInstance) {
+        graph3DInstance.graphData(data);
+        return;
+      }
 
       const container = document.getElementById('graph3d-canvas');
+
       graph3DInstance = ForceGraph3D()(container)
         .graphData(data)
-        .nodeLabel(node => \`<b>[\${node.type}]</b> \${node.name}\`)
-        .nodeVal('val')
-        .nodeColor('color')
-        .nodeResolution(16)
-        .linkColor('color')
+        .backgroundColor('#ffffff')
+        .showNavInfo(false)
+        .nodeThreeObject(node => {
+          const group = new THREE.Group();
+          const nodeColor = node.color || typeColors[node.type] || '#3b82f6';
+          const size = node.type === 'Workspace' ? 14 : node.type === 'Project' ? 13 : node.type === 'Checkpoint' ? 10 : 8;
+
+          // Outer Soft Glow Halo
+          const haloGeo = new THREE.SphereGeometry(size * 1.35, 24, 24);
+          const haloMat = new THREE.MeshBasicMaterial({
+            color: nodeColor,
+            transparent: true,
+            opacity: 0.18,
+          });
+          const halo = new THREE.Mesh(haloGeo, haloMat);
+          group.add(halo);
+
+          // Inner Vibrant Sphere
+          const geometry = new THREE.SphereGeometry(size, 32, 32);
+          const material = new THREE.MeshLambertMaterial({
+            color: nodeColor,
+            transparent: true,
+            opacity: 0.95,
+          });
+          const sphere = new THREE.Mesh(geometry, material);
+          group.add(sphere);
+
+          // 2D Text Label right underneath node
+          const labelText = node.name || node.type || node.id;
+          const sprite = new SpriteText(labelText);
+          sprite.color = '#0f172a';
+          sprite.textHeight = 4.0;
+          sprite.fontWeight = 'bold';
+          sprite.position.y = -size - 5.5;
+          group.add(sprite);
+
+          // Count badge right below label
+          const connectionCount = data.links.filter(
+            l => (l.source.id || l.source) === node.id || (l.target.id || l.target) === node.id
+          ).length;
+          const badge = new SpriteText(String(connectionCount));
+          badge.color = '#64748b';
+          badge.textHeight = 3.2;
+          badge.position.y = -size - 10.5;
+          group.add(badge);
+
+          return group;
+        })
+        .linkColor(() => '#cbd5e1')
         .linkWidth(1.2)
         .linkDirectionalParticles(2)
-        .linkDirectionalParticleSpeed(0.005)
+        .linkDirectionalParticleSpeed(0.0035)
         .linkDirectionalParticleWidth(1.5)
-        .linkDirectionalArrowLength(3.5)
-        .linkDirectionalArrowRelPos(1)
-        .backgroundColor('#050811')
+        .linkDirectionalParticleColor(() => '#94a3b8')
         .onNodeClick(node => {
-          // Smooth camera focus on clicked node
-          const distance = 80;
-          const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-          graph3DInstance.cameraPosition(
-            { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
-            node,
-            1500
-          );
+          focusOnNode(node);
+          inspectNode(node);
         });
 
-      // Camera auto-orbit
+      // Lighting & Ambience
+      const scene = graph3DInstance.scene();
+
+      // Soft white ambient light
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
+      scene.add(ambientLight);
+
+      // Key light
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.65);
+      dirLight.position.set(120, 200, 150);
+      scene.add(dirLight);
+
+      // Camera Position
+      graph3DInstance.cameraPosition({ x: 0, y: 15, z: 230 }, { x: 0, y: 0, z: 0 }, 1000);
+
+      // Select first node (e.g. Workspace or Project) by default
+      const defaultNode = data.nodes.find(n => n.type === 'Workspace') || data.nodes[0];
+      if (defaultNode) {
+        inspectNode(defaultNode);
+      }
+
+      // Auto-Orbit Loop
       let angle = 0;
       setInterval(() => {
         if (isAutoRotating && graph3DInstance) {
-          angle += Math.PI / 1200;
+          angle += Math.PI / 1800;
           graph3DInstance.cameraPosition({
-            x: 250 * Math.sin(angle),
-            z: 250 * Math.cos(angle)
+            x: 230 * Math.sin(angle),
+            z: 230 * Math.cos(angle)
           });
         }
       }, 25);
     }
 
-    function toggle3DView() {
-      const modal = document.getElementById('modal3D');
-      const main = document.getElementById('mainDashboard');
-      const toggleBtn = document.getElementById('toggleText');
+    function focusOnNode(node) {
+      const distance = 80;
+      const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+      graph3DInstance.cameraPosition(
+        { x: node.x * distRatio, y: node.y * distRatio + 5, z: node.z * distRatio },
+        node,
+        1400
+      );
+    }
 
-      is3DActive = !is3DActive;
-      if (is3DActive) {
-        modal.classList.remove('hidden');
-        main.classList.add('hidden');
-        toggleBtn.textContent = 'Back to 2D Dashboard';
-        init3DGraph();
+    function inspectNode(node) {
+      const panel = document.getElementById('inspectorPanel');
+      panel.classList.remove('hidden');
+
+      const color = node.color || typeColors[node.type] || '#3b82f6';
+      const avatar = document.getElementById('insAvatar');
+      avatar.style.backgroundColor = color;
+      avatar.style.boxShadow = \`0 8px 20px -3px \${color}55\`;
+
+      const iconClass = typeIcons[node.type] || 'fa-circle';
+      avatar.innerHTML = \`<i class="fa-solid \${iconClass}"></i>\`;
+
+      document.getElementById('insTitle').textContent = node.name || node.id;
+      document.getElementById('insSubtitle').textContent = node.type + ' Node';
+      document.getElementById('insId').textContent = node.id;
+      document.getElementById('insType').innerHTML = \`<span class="w-2 h-2 rounded-full" style="background-color: \${color}"></span> \${node.type}\`;
+
+      // Find Connected Nodes
+      const connected = [];
+      for (const l of graphData.links) {
+        const srcId = l.source.id || l.source;
+        const tgtId = l.target.id || l.target;
+        if (srcId === node.id) {
+          const tgt = graphData.nodes.find(n => n.id === tgtId);
+          if (tgt) connected.push(tgt);
+        } else if (tgtId === node.id) {
+          const src = graphData.nodes.find(n => n.id === srcId);
+          if (src) connected.push(src);
+        }
+      }
+
+      document.getElementById('insConnections').textContent = connected.length;
+
+      const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('insCreated').textContent = dateStr;
+      document.getElementById('insUpdated').textContent = dateStr;
+
+      // Description / Notes
+      let note = 'Connected entity in the Second Brain knowledge graph.';
+      if (node.type === 'Workspace') note = 'Core workspace node. Connects projects, tasks and decisions.';
+      else if (node.type === 'Project') note = 'Active project tracked across multiple AI models (Claude, Gemini, GPT).';
+      else if (node.type === 'Checkpoint') note = 'Cognitive snapshot saving progress, open tasks, blockers, and stop reason.';
+      else if (node.type === 'Decision') note = 'Architectural decision preserved across model context boundaries.';
+      else if (node.type === 'Task') note = 'Action item or blocker flagged for continuation.';
+      document.getElementById('insNotes').textContent = note;
+
+      // Render Connected Nodes List
+      const connectedListEl = document.getElementById('insConnectedList');
+      if (connected.length === 0) {
+        connectedListEl.innerHTML = '<div class="text-slate-400 italic text-[11px]">No direct connections.</div>';
       } else {
-        modal.classList.add('hidden');
-        main.classList.remove('hidden');
-        toggleBtn.textContent = 'View in 3D Universe';
+        connectedListEl.innerHTML = connected.map(c => {
+          const cColor = c.color || typeColors[c.type] || '#3b82f6';
+          return \`
+            <div class="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-slate-50 cursor-pointer text-xs" onclick='selectNodeById("\${c.id}")'>
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full" style="background-color: \${cColor}"></span>
+                <span class="font-medium text-slate-800">\${c.name || c.id}</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-slate-400 font-mono text-[11px]">
+                <span>\${c.id.substring(0, 8)}</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+              </div>
+            </div>
+          \`;
+        }).join('');
       }
     }
 
-    function toggleOrbit() {
+    function selectNodeById(id) {
+      const node = graphData.nodes.find(n => n.id === id);
+      if (node) {
+        focusOnNode(node);
+        inspectNode(node);
+      }
+    }
+
+    function closeInspector() {
+      document.getElementById('inspectorPanel').classList.add('hidden');
+    }
+
+    function toggleAutoRotate() {
       isAutoRotating = !isAutoRotating;
-      document.getElementById('btnOrbit').innerHTML = isAutoRotating
-        ? '<i class="fa-solid fa-arrows-rotate"></i> Auto-Rotate: ON'
-        : '<i class="fa-solid fa-pause"></i> Auto-Rotate: OFF';
+      const btn = document.getElementById('btnAutoRotate');
+      btn.className = isAutoRotating
+        ? 'px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 text-xs font-semibold flex items-center gap-1.5 transition'
+        : 'px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-semibold flex items-center gap-1.5 transition';
     }
 
     function resetCamera() {
       if (graph3DInstance) {
-        graph3DInstance.cameraPosition({ x: 0, y: 0, z: 280 }, { x: 0, y: 0, z: 0 }, 1000);
+        graph3DInstance.cameraPosition({ x: 0, y: 15, z: 230 }, { x: 0, y: 0, z: 0 }, 1000);
+      }
+    }
+
+    function fitView() {
+      if (graph3DInstance) {
+        graph3DInstance.zoomToFit(1000, 40);
+      }
+    }
+
+    function copyNodeId() {
+      const id = document.getElementById('insId').textContent;
+      navigator.clipboard.writeText(id);
+      alert('Node ID copied: ' + id);
+    }
+
+    function filterByType(type) {
+      if (!graph3DInstance) return;
+      if (type === 'all') {
+        graph3DInstance.graphData(graphData);
+      } else {
+        const filteredNodes = graphData.nodes.filter(n => n.type === type);
+        const nodeIds = new Set(filteredNodes.map(n => n.id));
+        const filteredLinks = graphData.links.filter(
+          l => nodeIds.has(l.source.id || l.source) || nodeIds.has(l.target.id || l.target)
+        );
+        graph3DInstance.graphData({ nodes: filteredNodes, links: filteredLinks });
+      }
+    }
+
+    function focusSearch() {
+      const term = prompt('Enter node name or ID to search:');
+      if (term) {
+        const found = graphData.nodes.find(n => 
+          (n.name && n.name.toLowerCase().includes(term.toLowerCase())) ||
+          n.id.toLowerCase().includes(term.toLowerCase())
+        );
+        if (found) {
+          focusOnNode(found);
+          inspectNode(found);
+        } else {
+          alert('No node found matching "' + term + '"');
+        }
       }
     }
 
@@ -365,13 +542,19 @@ export function getDashboardHtml(): string {
       }
     }
 
-    // Auto open 3D if URL has ?3d=true
-    window.onload = async () => {
-      await loadAllData();
-      if (window.location.search.includes('3d=true')) {
-        toggle3DView();
-      }
-    };
+    function toggleDashboardMode() {
+      window.location.href = '/';
+    }
+
+    function toggleTheme() {
+      alert('Second Brain Core is optimized in Ultra-Clean Studio Light Mode.');
+    }
+
+    function refreshData() {
+      loadData();
+    }
+
+    window.onload = loadData;
   </script>
 </body>
 </html>`;

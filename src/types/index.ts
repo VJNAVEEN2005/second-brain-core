@@ -136,14 +136,31 @@ export const EventSchema = z.object({
 export type BrainEvent = z.infer<typeof EventSchema>;
 
 // ==========================================
+// PERSONALITY & REASONING MODES
+// ==========================================
+export const PersonalityModeEnum = z.enum([
+  'CEO',
+  'ENGINEER',
+  'CREATIVE',
+  'SCIENTIST',
+  'TEACHER',
+  'EINSTEIN',
+]);
+
+export type PersonalityMode = z.infer<typeof PersonalityModeEnum>;
+
+// ==========================================
 // IDENTITY TYPES
 // ==========================================
 export const UserIdentitySchema = z.object({
   name: z.string(),
   role: z.string().optional(),
+  companies: z.array(z.string()).optional().default([]),
+  channels: z.array(z.string()).optional().default([]),
   skills: z.array(z.string()).optional().default([]),
   interests: z.array(z.string()).optional().default([]),
   goals: z.array(z.string()).optional().default([]),
+  activeMode: PersonalityModeEnum.optional().default('CEO'),
   preferences: z.record(z.any()).optional().default({}),
 });
 
@@ -166,4 +183,5 @@ export interface ResumePackage {
   openQuestions: string[];
   timestamp: string;
   graphContext?: string;
+  userDirective?: string;
 }

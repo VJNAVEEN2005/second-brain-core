@@ -18,7 +18,7 @@ export class ClaudeAdapter implements ModelAdapter {
       .join('\n');
 
     const prompt = `<second_brain_continuation version="1.0">
-  <project id="${resume.projectId}" name="${resume.project}" progress="${resume.completion}%">
+${resume.userDirective ? `  <executive_persona>\n    ${resume.userDirective.split('\n').join('\n    ')}\n  </executive_persona>\n` : ''}  <project id="${resume.projectId}" name="${resume.project}" progress="${resume.completion}%">
     <current_task>${resume.currentTask}</current_task>
     <next_task>${resume.nextTask}</next_task>
     <stopped_because>${resume.stopReason}</stopped_because>
@@ -65,7 +65,7 @@ ${resume.graphContext ? `    ${resume.graphContext.split('\n').join('\n    ')}` 
 
 export class GeminiAdapter implements ModelAdapter {
   format(resume: ResumePackage): ModelContinuationPackage {
-    const prompt = `## 🧠 Second Brain Cognitive Handoff: ${resume.project}
+    const prompt = `${resume.userDirective ? `${resume.userDirective}\n\n---\n\n` : ''}## 🧠 Second Brain Cognitive Handoff: ${resume.project}
 **Progress**: ${resume.completion}% | **Status**: ACTIVE | **Handoff Reason**: ${resume.stopReason}
 **Active Task**: ${resume.currentTask}
 **Next Task**: ${resume.nextTask}
@@ -105,7 +105,7 @@ Resume work directly on **"${resume.currentTask}"**. The project context is pre-
 
 export class GPTAdapter implements ModelAdapter {
   format(resume: ResumePackage): ModelContinuationPackage {
-    const prompt = `System State Restoration: Second Brain Universal Memory Layer
+    const prompt = `${resume.userDirective ? `${resume.userDirective}\n\n==================================================\n\n` : ''}System State Restoration: Second Brain Universal Memory Layer
 Project: ${resume.project} [${resume.projectId}]
 Progress: ${resume.completion}%
 Handoff Reason: ${resume.stopReason}

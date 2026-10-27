@@ -9,6 +9,8 @@ import { MemoryEngine } from '../memory/memory.engine.js';
 import { ContinuationEngine } from '../adapters/models/continuation.engine.js';
 import { BranchEngine } from '../vcs/branch.engine.js';
 import { ConflictEngine } from '../vcs/conflict.engine.js';
+import { IdentityEngine, ExtendedIdentity } from '../engines/identity.engine.js';
+import { PersonalityEngine } from '../engines/personality.engine.js';
 import { GraphAdapter } from '../graph/adapter.js';
 import { MemoryGraphAdapter } from '../graph/memory.adapter.js';
 import { Neo4jGraphAdapter, Neo4jConfig } from '../graph/neo4j.adapter.js';
@@ -38,6 +40,7 @@ import {
   ConflictRecord,
   ConflictStatus,
   ResolveConflictInput,
+  PersonalityMode,
 } from '../types/index.js';
 
 export interface SecondBrainConfig {
@@ -59,6 +62,8 @@ export class SecondBrain {
   public continuation: ContinuationEngine;
   public branches: BranchEngine;
   public conflicts: ConflictEngine;
+  public identity: IdentityEngine;
+  public personality: PersonalityEngine;
   private defaultSource: string;
 
   constructor(config: SecondBrainConfig = {}) {
@@ -80,6 +85,7 @@ export class SecondBrain {
     this.continuation = new ContinuationEngine();
     this.branches = new BranchEngine(this.storage, this.events);
     this.conflicts = new ConflictEngine(this.events);
+    this.personality = new PersonalityEngine();
 
     // Graph Engine Initialization
     let graphAdapter: GraphAdapter;
@@ -96,6 +102,7 @@ export class SecondBrain {
       graphAdapter = new MemoryGraphAdapter();
     }
     this.graph = new GraphEngine(graphAdapter, this.events);
+    this.identity = new IdentityEngine(this.graph, this.events);
   }
 
   // ==========================================
@@ -367,6 +374,13 @@ export class SecondBrain {
       graphContextFormatted = undefined;
     }
 
+    // Formulate Executive Persona Directive (CEO, Engineer, Creative, etc.)
+    const userProfile = await this.identity.getIdentity();
+    const directive = this.personality.getSystemPersonaDirective(
+      userProfile.activeMode || 'CEO',
+      userProfile
+    );
+
     return {
       project: targetProject.name,
       projectId: targetProject.id,
@@ -385,6 +399,7 @@ export class SecondBrain {
       openQuestions: latestCheckpoint ? latestCheckpoint.openQuestions : [],
       timestamp: new Date().toISOString(),
       graphContext: graphContextFormatted,
+      userDirective: directive,
     };
   }
 

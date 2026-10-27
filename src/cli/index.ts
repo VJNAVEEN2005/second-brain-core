@@ -330,6 +330,62 @@ program
     }
   });
 
+// ==========================================
+// IDENTITY & REASONING MODE COMMANDS
+// ==========================================
+const identityCmd = program.command('identity').description('Manage user identity and profile');
+
+identityCmd
+  .command('show')
+  .description('Display stored identity, companies, channels, and goals')
+  .action(async () => {
+    const id = await brain.identity.getIdentity();
+    console.log('\n👤 SECOND BRAIN: USER IDENTITY PROFILE');
+    console.log('────────────────────────────────────────────────');
+    console.log(`Name:        ${id.name}`);
+    console.log(`Role:        ${id.role}`);
+    console.log(`Active Mode: 👑 ${id.activeMode || 'CEO'}`);
+    console.log(`Companies:   ${id.companies?.join(', ') || 'None'}`);
+    console.log(`Channels:    ${id.channels?.join(', ') || 'None'}`);
+    console.log(`Skills:      ${id.skills?.join(', ') || 'None'}`);
+    console.log(`Goals:       ${id.goals?.join('; ') || 'None'}`);
+    console.log('────────────────────────────────────────────────\n');
+  });
+
+identityCmd
+  .command('set')
+  .description('Update user identity profile')
+  .option('-n, --name <name>', 'Your name')
+  .option('-r, --role <role>', 'Your role (e.g. CEO, Founder)')
+  .option('-c, --companies <companies...>', 'Your companies')
+  .option('-y, --channels <channels...>', 'Your YouTube channels')
+  .option('-m, --mode <mode>', 'Reasoning mode (CEO, ENGINEER, CREATIVE, SCIENTIST)')
+  .action(async (options) => {
+    const updates: any = {};
+    if (options.name) updates.name = options.name;
+    if (options.role) updates.role = options.role;
+    if (options.companies) updates.companies = options.companies;
+    if (options.channels) updates.channels = options.channels;
+    if (options.mode) updates.activeMode = options.mode.toUpperCase();
+
+    const updated = await brain.identity.updateIdentity(updates);
+    console.log(`\n✅ Identity updated for ${updated.name} (${updated.role}) [Mode: ${updated.activeMode}]\n`);
+  });
+
+program
+  .command('mode <mode>')
+  .description('Switch AI reasoning persona mode: CEO, ENGINEER, CREATIVE, SCIENTIST')
+  .action(async (mode) => {
+    const valid = ['CEO', 'ENGINEER', 'CREATIVE', 'SCIENTIST', 'TEACHER', 'EINSTEIN'];
+    const selected = valid.find((m) => m.toLowerCase() === mode.toLowerCase());
+    if (!selected) {
+      console.error(`Invalid mode. Choose from: ${valid.join(', ')}`);
+      process.exit(1);
+    }
+    await brain.identity.setMode(selected as any);
+    console.log(`\n🧠 Second Brain Reasoning Mode set to: 👑 ${selected}\n`);
+  });
+
 // Default action: if no args, show status or help
 if (process.argv.length <= 2) {
   process.argv.push('status');
