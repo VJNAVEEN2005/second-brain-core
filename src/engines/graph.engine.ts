@@ -97,6 +97,10 @@ export class GraphEngine {
     return this.adapter.getSubgraph(nodeId, depth);
   }
 
+  async getAll(): Promise<{ nodes: GraphNode[]; relationships: GraphRelationship[] }> {
+    return this.adapter.getAll();
+  }
+
   /**
    * Compactly formats a GraphContext into a token-efficient visual representation
    * for prompt injection across models (Claude, Gemini, GPT).

@@ -282,4 +282,11 @@ export class LocalFileGraphAdapter implements GraphAdapter {
       relationships: Array.from(includedRelationships.values()),
     };
   }
+
+  async getAll(): Promise<{ nodes: GraphNode[]; relationships: GraphRelationship[] }> {
+    return {
+      nodes: Array.from(this.nodes.values()).map((n) => ({ ...n })),
+      relationships: Array.from(this.relationships.values()).map((r) => ({ ...r })),
+    };
+  }
 }

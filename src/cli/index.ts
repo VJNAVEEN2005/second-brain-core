@@ -238,6 +238,30 @@ program
   });
 
 // ==========================================
+// 3D COSMOS VIEW COMMAND
+// ==========================================
+program
+  .command('3d')
+  .description('Launch immersive 3D WebGL knowledge universe in browser')
+  .option('-p, --port <number>', 'Port number', '3000')
+  .action(async (options) => {
+    const port = parseInt(options.port, 10);
+    const app = await buildServer(brain, { logger: false });
+    await app.listen({ port, host: '127.0.0.1' });
+    const url = `http://127.0.0.1:${port}/?3d=true`;
+    console.log(`\n🌌 Second Brain 3D Universe running at ${url}`);
+    console.log('   Opening 3D canvas in your browser...\n');
+
+    const startCmd =
+      process.platform === 'win32'
+        ? `start ${url}`
+        : process.platform === 'darwin'
+        ? `open ${url}`
+        : `xdg-open ${url}`;
+    exec(startCmd);
+  });
+
+// ==========================================
 // LOG / TIMELINE COMMAND
 // ==========================================
 program

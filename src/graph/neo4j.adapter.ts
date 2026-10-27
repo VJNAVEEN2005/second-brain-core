@@ -275,6 +275,42 @@ export class Neo4jGraphAdapter implements GraphAdapter {
     }
   }
 
+  async getAll(): Promise<{ nodes: GraphNode[]; relationships: GraphRelationship[] }> {
+    const session = this.getSession();
+    try {
+      const cypher = `
+        MATCH (n)
+        OPTIONAL MATCH (n)-[r]->(m)
+        RETURN collect(DISTINCT { id: n.id, type: labels(n)[0], props: properties(n) }) AS nodes,
+               collect(DISTINCT { id: r.id, relType: type(r), sourceId: startNode(r).id, targetId: endNode(r).id, props: properties(r) }) AS rels
+      `;
+      const result = await session.run(cypher);
+      if (result.records.length === 0) return { nodes: [], relationships: [] };
+      const record = result.records[0];
+      const rawNodes = (record.get('nodes') as Array<{ id: string; type: string; props: Record<string, unknown> }>) || [];
+      const rawRels = (record.get('rels') as Array<{ id: string; relType: string; sourceId: string; targetId: string; props: Record<string, unknown> }>) || [];
+
+      return {
+        nodes: rawNodes.filter((n) => n && n.id).map((n) => ({
+          id: n.id,
+          type: n.type as NodeType,
+          properties: n.props || {},
+          createdAt: new Date().toISOString(),
+        })),
+        relationships: rawRels.filter((r) => r && r.id).map((r) => ({
+          id: r.id,
+          sourceId: r.sourceId,
+          relType: r.relType as RelationshipType,
+          targetId: r.targetId,
+          properties: r.props || {},
+          createdAt: new Date().toISOString(),
+        })),
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
   async close(): Promise<void> {
     await this.driver.close();
   }

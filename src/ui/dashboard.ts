@@ -4,8 +4,9 @@ export function getDashboardHtml(): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Second Brain Core — Cognitive Dashboard</title>
+  <title>Second Brain Core — 3D Cognitive Universe</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/3d-force-graph"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -21,29 +22,33 @@ export function getDashboardHtml(): string {
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { background-color: #0b0f19; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; }
-    .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    body { background-color: #080c14; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+    .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.08); }
     .badge-limit { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
     .badge-completed { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
     .badge-user { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
+    #graph3d-canvas canvas { outline: none; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
   <!-- Top Navigation -->
-  <header class="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-gray-800">
+  <header class="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-gray-800/80">
     <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/30">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/30">
         🧠
       </div>
       <div>
         <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
           Second Brain Core
-          <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Local Node</span>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Local Node</span>
         </h1>
         <p class="text-xs text-gray-400">Universal Memory Layer for AI Systems</p>
       </div>
     </div>
     <div class="flex items-center space-x-3">
+      <button onclick="toggle3DView()" id="btnToggle3D" class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-xs font-bold text-white transition flex items-center gap-2 shadow-md shadow-cyan-500/30">
+        <i class="fa-solid fa-cube"></i> <span id="toggleText">View in 3D Universe</span>
+      </button>
       <button onclick="copyResumePrompt('Gemini')" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition flex items-center gap-1.5 shadow-md shadow-indigo-600/30">
         <i class="fa-solid fa-copy"></i> Copy Gemini Prompt
       </button>
@@ -56,8 +61,42 @@ export function getDashboardHtml(): string {
     </div>
   </header>
 
-  <!-- Main Grid Content -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+  <!-- Fullscreen 3D Cosmos Modal View (hidden by default) -->
+  <div id="modal3D" class="hidden fixed inset-0 z-40 bg-black/90 flex flex-col pt-16">
+    <!-- 3D Header Overlay -->
+    <div class="absolute top-20 left-6 z-50 glass px-5 py-3 rounded-xl border border-gray-700/60 pointer-events-auto">
+      <h3 class="text-sm font-bold text-white flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-cyan-400 animate-pulse"></span>
+        3D Cognitive Universe
+      </h3>
+      <p class="text-xs text-gray-400 mt-0.5">Drag left click to rotate • Scroll to zoom • Right click to pan</p>
+      <div class="flex items-center gap-2 mt-3">
+        <button onclick="toggleOrbit()" id="btnOrbit" class="px-2.5 py-1 rounded bg-gray-800 hover:bg-gray-700 text-[11px] font-medium text-gray-300 border border-gray-700">
+          <i class="fa-solid fa-arrows-rotate"></i> Auto-Rotate: ON
+        </button>
+        <button onclick="resetCamera()" class="px-2.5 py-1 rounded bg-gray-800 hover:bg-gray-700 text-[11px] font-medium text-gray-300 border border-gray-700">
+          <i class="fa-solid fa-crosshairs"></i> Reset View
+        </button>
+      </div>
+    </div>
+
+    <!-- Node Color Legend Overlay -->
+    <div class="absolute bottom-6 left-6 z-50 glass px-4 py-3 rounded-xl border border-gray-800/80 pointer-events-auto text-xs space-y-1.5">
+      <div class="font-bold text-gray-300 pb-1 border-b border-gray-800">Node Types:</div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> User</div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Workspace</div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Project</div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> Checkpoint</div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Decision</div>
+      <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span> Blocker / Task</div>
+    </div>
+
+    <!-- 3D Canvas Mount Point -->
+    <div id="graph3d-canvas" class="w-full flex-1 relative"></div>
+  </div>
+
+  <!-- Standard Dashboard Content -->
+  <main id="mainDashboard" class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
     <!-- Active State Hero Card -->
     <div id="activeProjectHero" class="glass rounded-2xl p-6 relative overflow-hidden">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -103,9 +142,7 @@ export function getDashboardHtml(): string {
           </h3>
           <span class="text-xs text-gray-400" id="checkpointCount">0 snapshots</span>
         </div>
-        <div id="checkpointsTimeline" class="space-y-3 max-h-[480px] overflow-y-auto pr-2">
-          <!-- Populated by JS -->
-        </div>
+        <div id="checkpointsTimeline" class="space-y-3 max-h-[480px] overflow-y-auto pr-2"></div>
       </div>
 
       <!-- Decisions & Blockers (Right 1 col) -->
@@ -132,19 +169,17 @@ export function getDashboardHtml(): string {
       </div>
     </div>
 
-    <!-- Knowledge Graph Visualizer Card -->
-    <div class="glass rounded-2xl p-6 space-y-4">
-      <div class="flex items-center justify-between">
-        <div>
-          <h3 class="text-lg font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-diagram-project text-cyan-400"></i> Knowledge Graph Map
-          </h3>
-          <p class="text-xs text-gray-400">Semantic connections between projects, checkpoints, decisions, and tools</p>
-        </div>
+    <!-- 3D Preview Quick Banner -->
+    <div class="glass rounded-2xl p-6 flex items-center justify-between border border-cyan-500/20 bg-gradient-to-r from-cyan-950/20 to-blue-950/20">
+      <div>
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-cube text-cyan-400"></i> Explore your Cognitive Map in Full 3D Space
+        </h3>
+        <p class="text-xs text-gray-400 mt-1">Visualize how all your projects, checkpoints, tools, and decisions connect in a WebGL 3D cosmos.</p>
       </div>
-      <div id="graphVisualizer" class="bg-gray-950/80 rounded-xl p-4 font-mono text-xs text-emerald-400 overflow-x-auto whitespace-pre border border-gray-800">
-Loading graph nodes...
-      </div>
+      <button onclick="toggle3DView()" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-xs font-bold text-gray-950 transition shadow-lg shadow-cyan-500/20">
+        Launch 3D Universe
+      </button>
     </div>
   </main>
 
@@ -154,6 +189,9 @@ Loading graph nodes...
 
   <script>
     let activeProjectId = '';
+    let graph3DInstance = null;
+    let is3DActive = false;
+    let isAutoRotating = true;
 
     async function loadAllData() {
       try {
@@ -206,10 +244,6 @@ Loading graph nodes...
           blkList.innerHTML = '<li class="text-emerald-400 italic">No blockers! Progressing smoothly.</li>';
         }
 
-        // Render Graph
-        const graphEl = document.getElementById('graphVisualizer');
-        graphEl.textContent = resume.graphContext || 'No graph relationships established yet.';
-
         // Fetch checkpoints timeline
         const chkRes = await fetch('/api/checkpoints/' + activeProjectId);
         if (chkRes.ok) {
@@ -237,6 +271,85 @@ Loading graph nodes...
       }
     }
 
+    // ==========================================
+    // 3D FORCE GRAPH INITIALIZATION
+    // ==========================================
+    async function init3DGraph() {
+      if (graph3DInstance) return;
+
+      const res = await fetch('/api/graph/3d');
+      const data = await res.json();
+
+      const container = document.getElementById('graph3d-canvas');
+      graph3DInstance = ForceGraph3D()(container)
+        .graphData(data)
+        .nodeLabel(node => \`<b>[\${node.type}]</b> \${node.name}\`)
+        .nodeVal('val')
+        .nodeColor('color')
+        .nodeResolution(16)
+        .linkColor('color')
+        .linkWidth(1.2)
+        .linkDirectionalParticles(2)
+        .linkDirectionalParticleSpeed(0.005)
+        .linkDirectionalParticleWidth(1.5)
+        .linkDirectionalArrowLength(3.5)
+        .linkDirectionalArrowRelPos(1)
+        .backgroundColor('#050811')
+        .onNodeClick(node => {
+          // Smooth camera focus on clicked node
+          const distance = 80;
+          const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+          graph3DInstance.cameraPosition(
+            { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+            node,
+            1500
+          );
+        });
+
+      // Camera auto-orbit
+      let angle = 0;
+      setInterval(() => {
+        if (isAutoRotating && graph3DInstance) {
+          angle += Math.PI / 1200;
+          graph3DInstance.cameraPosition({
+            x: 250 * Math.sin(angle),
+            z: 250 * Math.cos(angle)
+          });
+        }
+      }, 25);
+    }
+
+    function toggle3DView() {
+      const modal = document.getElementById('modal3D');
+      const main = document.getElementById('mainDashboard');
+      const toggleBtn = document.getElementById('toggleText');
+
+      is3DActive = !is3DActive;
+      if (is3DActive) {
+        modal.classList.remove('hidden');
+        main.classList.add('hidden');
+        toggleBtn.textContent = 'Back to 2D Dashboard';
+        init3DGraph();
+      } else {
+        modal.classList.add('hidden');
+        main.classList.remove('hidden');
+        toggleBtn.textContent = 'View in 3D Universe';
+      }
+    }
+
+    function toggleOrbit() {
+      isAutoRotating = !isAutoRotating;
+      document.getElementById('btnOrbit').innerHTML = isAutoRotating
+        ? '<i class="fa-solid fa-arrows-rotate"></i> Auto-Rotate: ON'
+        : '<i class="fa-solid fa-pause"></i> Auto-Rotate: OFF';
+    }
+
+    function resetCamera() {
+      if (graph3DInstance) {
+        graph3DInstance.cameraPosition({ x: 0, y: 0, z: 280 }, { x: 0, y: 0, z: 0 }, 1000);
+      }
+    }
+
     async function copyResumePrompt(model) {
       try {
         const res = await fetch('/api/continuation/' + model, {
@@ -252,7 +365,13 @@ Loading graph nodes...
       }
     }
 
-    window.onload = loadAllData;
+    // Auto open 3D if URL has ?3d=true
+    window.onload = async () => {
+      await loadAllData();
+      if (window.location.search.includes('3d=true')) {
+        toggle3DView();
+      }
+    };
   </script>
 </body>
 </html>`;

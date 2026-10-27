@@ -26,5 +26,6 @@ export interface GraphAdapter {
   ): Promise<GraphNeighbor[]>;
 
   getSubgraph(rootId: string, maxDepth?: number): Promise<GraphContext>;
+  getAll(): Promise<{ nodes: GraphNode[]; relationships: GraphRelationship[] }>;
   close?(): Promise<void>;
 }

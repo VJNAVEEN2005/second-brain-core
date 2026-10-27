@@ -197,6 +197,40 @@ export async function buildServer(
     return brain.getGraphContext(req.params.id, depth);
   });
 
+  app.get('/api/graph/3d', async () => {
+    const raw = await brain.graph.getAll();
+    const colors: Record<string, string> = {
+      User: '#a855f7',
+      Workspace: '#6366f1',
+      Project: '#10b981',
+      Checkpoint: '#06b6d4',
+      Decision: '#f59e0b',
+      Task: '#f43f5e',
+      Repository: '#3b82f6',
+      Channel: '#ec4899',
+      Document: '#8b5cf6',
+      Meeting: '#14b8a6',
+    };
+
+    const nodes = raw.nodes.map((n) => ({
+      id: n.id,
+      name: (n.properties.name as string) || (n.properties.summary as string) || n.id,
+      type: n.type,
+      val: n.type === 'Project' ? 15 : n.type === 'Workspace' ? 12 : n.type === 'Checkpoint' ? 9 : 6,
+      color: colors[n.type] || '#94a3b8',
+      properties: n.properties,
+    }));
+
+    const links = raw.relationships.map((r) => ({
+      source: r.sourceId,
+      target: r.targetId,
+      label: r.relType,
+      color: 'rgba(255, 255, 255, 0.35)',
+    }));
+
+    return { nodes, links };
+  });
+
   // ==========================================
   // 4-TIER MEMORY
   // ==========================================
