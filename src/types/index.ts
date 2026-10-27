@@ -2,6 +2,7 @@ import { z } from 'zod';
 export * from './graph.js';
 export * from '../memory/types.js';
 export * from '../adapters/models/types.js';
+export * from '../vcs/types.js';
 
 // ==========================================
 // STOP REASONS

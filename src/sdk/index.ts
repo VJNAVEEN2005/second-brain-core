@@ -7,6 +7,8 @@ import { CheckpointEngine } from '../engines/checkpoint.engine.js';
 import { GraphEngine } from '../engines/graph.engine.js';
 import { MemoryEngine } from '../memory/memory.engine.js';
 import { ContinuationEngine } from '../adapters/models/continuation.engine.js';
+import { BranchEngine } from '../vcs/branch.engine.js';
+import { ConflictEngine } from '../vcs/conflict.engine.js';
 import { GraphAdapter } from '../graph/adapter.js';
 import { MemoryGraphAdapter } from '../graph/memory.adapter.js';
 import { Neo4jGraphAdapter, Neo4jConfig } from '../graph/neo4j.adapter.js';
@@ -31,6 +33,11 @@ import {
   MemoryQuery,
   TargetModel,
   ModelContinuationPackage,
+  Branch,
+  CreateBranchInput,
+  ConflictRecord,
+  ConflictStatus,
+  ResolveConflictInput,
 } from '../types/index.js';
 
 export interface SecondBrainConfig {
@@ -50,6 +57,8 @@ export class SecondBrain {
   public graph: GraphEngine;
   public memory: MemoryEngine;
   public continuation: ContinuationEngine;
+  public branches: BranchEngine;
+  public conflicts: ConflictEngine;
   private defaultSource: string;
 
   constructor(config: SecondBrainConfig = {}) {
@@ -69,6 +78,8 @@ export class SecondBrain {
     this.checkpoints = new CheckpointEngine(this.storage, this.events);
     this.memory = new MemoryEngine(this.storage, this.events);
     this.continuation = new ContinuationEngine();
+    this.branches = new BranchEngine(this.storage, this.events);
+    this.conflicts = new ConflictEngine(this.events);
 
     // Graph Engine Initialization
     let graphAdapter: GraphAdapter;
@@ -139,6 +150,20 @@ export class SecondBrain {
       {},
       src
     );
+
+    // Initialize default 'main' branch for version control
+    try {
+      await this.branches.createBranch(
+        {
+          projectId: project.id,
+          name: 'main',
+          version: '0.1.0',
+        },
+        src
+      );
+    } catch {
+      // Ignore if branch already initialized
+    }
 
     return project;
   }
@@ -230,6 +255,17 @@ export class SecondBrain {
         {},
         src
       );
+    }
+
+    // Update main branch head
+    try {
+      await this.branches.updateBranchHead(
+        checkpoint.projectId,
+        'main',
+        checkpoint.checkpointId
+      );
+    } catch {
+      // If branch doesn't exist yet, non-blocking
     }
 
     return checkpoint;
@@ -362,6 +398,60 @@ export class SecondBrain {
   ): Promise<ModelContinuationPackage> {
     const resumePackage = await this.resume(projectId);
     return this.continuation.generateContinuation(targetModel, resumePackage);
+  }
+
+  // ==========================================
+  // VERSION CONTROL & CONFLICT RESOLUTION (PHASE 5)
+  // ==========================================
+  async createBranch(
+    input: CreateBranchInput,
+    source?: string
+  ): Promise<Branch> {
+    return this.branches.createBranch(input, source || this.defaultSource);
+  }
+
+  async listBranches(projectId: string): Promise<Branch[]> {
+    return this.branches.listBranches(projectId);
+  }
+
+  async bumpVersion(
+    projectId: string,
+    branchName: string,
+    type: 'major' | 'minor' | 'patch'
+  ): Promise<Branch> {
+    return this.branches.bumpVersion(projectId, branchName, type);
+  }
+
+  async detectConflict(
+    projectId: string,
+    field: string,
+    existingValue: unknown,
+    newValue: unknown,
+    existingSource: string,
+    newSource: string
+  ): Promise<ConflictRecord | null> {
+    return this.conflicts.detectConflict(
+      projectId,
+      field,
+      existingValue,
+      newValue,
+      existingSource,
+      newSource
+    );
+  }
+
+  async listConflicts(
+    projectId: string,
+    status?: ConflictStatus
+  ): Promise<ConflictRecord[]> {
+    return this.conflicts.listConflicts(projectId, status);
+  }
+
+  async resolveConflict(
+    conflictId: string,
+    input: ResolveConflictInput
+  ): Promise<ConflictRecord> {
+    return this.conflicts.resolveConflict(conflictId, input);
   }
 
   // ==========================================

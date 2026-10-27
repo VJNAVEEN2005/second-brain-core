@@ -235,6 +235,85 @@ export async function buildServer(
   });
 
   // ==========================================
+  // VERSION CONTROL & BRANCHING
+  // ==========================================
+  app.post<{
+    Params: { id: string };
+    Body: { name: string; version?: string; fromCheckpointId?: string };
+  }>('/api/projects/:id/branches', async (req, reply) => {
+    const source = (req.headers['x-brain-source'] as string) || 'SYSTEM';
+    if (!req.body?.name) {
+      return reply.status(400).send({ error: 'Branch name is required' });
+    }
+    try {
+      const branch = await brain.createBranch(
+        {
+          projectId: req.params.id,
+          name: req.body.name,
+          version: req.body.version,
+          fromCheckpointId: req.body.fromCheckpointId,
+        },
+        source
+      );
+      return reply.status(201).send(branch);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to create branch';
+      return reply.status(400).send({ error: msg });
+    }
+  });
+
+  app.get<{ Params: { id: string } }>('/api/projects/:id/branches', async (req) => {
+    return brain.listBranches(req.params.id);
+  });
+
+  // ==========================================
+  // CONFLICT RESOLUTION
+  // ==========================================
+  app.post<{
+    Params: { id: string };
+    Body: {
+      field: string;
+      existingValue: unknown;
+      newValue: unknown;
+      existingSource: string;
+      newSource: string;
+    };
+  }>('/api/projects/:id/conflicts/detect', async (req, reply) => {
+    const conflict = await brain.detectConflict(
+      req.params.id,
+      req.body.field,
+      req.body.existingValue,
+      req.body.newValue,
+      req.body.existingSource,
+      req.body.newSource
+    );
+    if (!conflict) {
+      return reply.status(200).send({ message: 'No conflict detected' });
+    }
+    return reply.status(200).send(conflict);
+  });
+
+  app.get<{
+    Params: { id: string };
+    Querystring: { status?: any };
+  }>('/api/projects/:id/conflicts', async (req) => {
+    return brain.listConflicts(req.params.id, req.query.status);
+  });
+
+  app.post<{
+    Params: { id: string };
+    Body: { action: any; customMergedValue?: unknown; resolverSource?: string };
+  }>('/api/conflicts/:id/resolve', async (req, reply) => {
+    try {
+      const resolved = await brain.resolveConflict(req.params.id, req.body);
+      return reply.status(200).send(resolved);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Resolution failed';
+      return reply.status(400).send({ error: msg });
+    }
+  });
+
+  // ==========================================
   // EVENTS
   // ==========================================
   app.get<{ Querystring: { projectId?: string; workspaceId?: string } }>(
