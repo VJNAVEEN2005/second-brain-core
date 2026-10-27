@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "description": "Universal Memory Layer for AI Systems",
   "main": "dist/index.js",
+  "bin": {
+    "second-brain-core": "./dist/cli/index.js",
+    "brain": "./dist/cli/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "scripts": {
     "build": "tsc",
@@ -24,6 +31,8 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@fastify/cors": "^10.0.2",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "commander": "^15.0.0",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.38.4",
     "fastify": "^5.2.1",

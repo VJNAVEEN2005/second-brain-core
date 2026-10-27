@@ -37,7 +37,7 @@ export const CreateWorkspaceInputSchema = z.object({
 });
 
 export type Workspace = z.infer<typeof WorkspaceSchema>;
-export type CreateWorkspaceInput = z.infer<typeof CreateWorkspaceInputSchema>;
+export type CreateWorkspaceInput = z.input<typeof CreateWorkspaceInputSchema>;
 
 // ==========================================
 // PROJECT TYPES
@@ -84,8 +84,8 @@ export const UpdateProjectInputSchema = z.object({
 });
 
 export type Project = z.infer<typeof ProjectSchema>;
-export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>;
-export type UpdateProjectInput = z.infer<typeof UpdateProjectInputSchema>;
+export type CreateProjectInput = z.input<typeof CreateProjectInputSchema>;
+export type UpdateProjectInput = z.input<typeof UpdateProjectInputSchema>;
 
 // ==========================================
 // CHECKPOINT TYPES
@@ -118,7 +118,7 @@ export const CreateCheckpointInputSchema = z.object({
 });
 
 export type Checkpoint = z.infer<typeof CheckpointSchema>;
-export type CreateCheckpointInput = z.infer<typeof CreateCheckpointInputSchema>;
+export type CreateCheckpointInput = z.input<typeof CreateCheckpointInputSchema>;
 
 // ==========================================
 // EVENT SOURCING TYPES

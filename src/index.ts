@@ -4,6 +4,9 @@ import { buildServer } from './server.js';
 
 export * from './types/index.js';
 export * from './db/storage.js';
+export * from './db/local-file.adapter.js';
+export * from './graph/local-file.adapter.js';
+export * from './mcp/server.js';
 export * from './engines/workspace.engine.js';
 export * from './engines/project.engine.js';
 export * from './engines/checkpoint.engine.js';
