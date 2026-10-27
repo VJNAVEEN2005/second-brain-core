@@ -10,7 +10,7 @@ export function getDashboardHtml(): string {
   <script src="https://unpkg.com/three-spritetext@1.8.2/dist/three-spritetext.min.js"></script>
   <script src="https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="icon" type="image/png" href="/assets/logo.png">
+  <link rel="icon" type="image/png" href="/assets/logo.png?v=2">
   <style>
     body { background-color: #f1f5f9; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; }
     .card-clean { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); }
@@ -23,7 +23,7 @@ export function getDashboardHtml(): string {
   <!-- Top Global Header -->
   <header class="bg-white px-7 py-3 flex items-center justify-between border-b border-slate-200/90 shadow-sm z-30">
     <div class="flex items-center space-x-3.5">
-      <img src="/assets/logo.png" alt="Second Brain Core" class="w-10 h-10 rounded-2xl object-contain drop-shadow-sm border border-slate-200/80 bg-white p-0.5 hover:scale-105 transition transform" />
+      <img src="/assets/logo.png?v=2" alt="Second Brain Core" class="w-10 h-10 rounded-2xl object-contain drop-shadow-sm border border-slate-200/80 bg-white p-0.5 hover:scale-105 transition transform" />
       <div>
         <div class="flex items-center gap-2">
           <h1 class="text-base font-bold tracking-tight text-slate-900">Second Brain Core</h1>
@@ -37,10 +37,6 @@ export function getDashboardHtml(): string {
 
     <!-- Header Actions -->
     <div class="flex items-center space-x-3">
-      <button onclick="toggleDashboardMode()" id="btnModeToggle" class="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 text-xs font-semibold transition flex items-center gap-2 shadow-xs">
-        <i class="fa-solid fa-house"></i> <span id="modeText">Back to 2D Dashboard</span>
-      </button>
-
       <button onclick="copyResumePrompt('Gemini')" class="px-4 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-semibold transition flex items-center gap-2 shadow-xs">
         <i class="fa-solid fa-copy"></i> Copy Gemini Prompt
       </button>
@@ -62,65 +58,59 @@ export function getDashboardHtml(): string {
   <!-- Main 3-Column Layout -->
   <div class="flex-1 flex gap-5 p-5 max-w-[1920px] w-full mx-auto overflow-hidden h-[calc(100vh-65px)]">
     <!-- Column 1: Left Sidebar -->
-    <aside class="w-60 flex flex-col gap-4 flex-shrink-0">
-      <!-- Nav Menu Card -->
-      <div class="card-clean rounded-2xl p-3 flex flex-col gap-1">
-        <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50/90 text-blue-600 font-semibold text-xs border border-blue-100/80 transition text-left">
+    <aside class="w-64 flex flex-col gap-4 flex-shrink-0 overflow-y-auto">
+      <!-- Nav & Search Card -->
+      <div class="card-clean rounded-2xl p-3.5 flex flex-col gap-2">
+        <button onclick="resetGraphView()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-600 font-semibold text-xs border border-blue-100 transition text-left">
           <i class="fa-solid fa-cube text-sm w-4 text-center"></i>
           <span>Cognitive Universe</span>
-        </button>
-        <button onclick="filterByType('all')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium text-xs transition text-left">
-          <i class="fa-solid fa-layer-group text-sm w-4 text-center text-slate-400"></i>
-          <span>Nodes</span>
         </button>
         <button onclick="filterByType('Project')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium text-xs transition text-left">
           <i class="fa-regular fa-folder text-sm w-4 text-center text-slate-400"></i>
           <span>Projects</span>
         </button>
-        <button onclick="focusSearch()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium text-xs transition text-left">
-          <i class="fa-solid fa-magnifying-glass text-sm w-4 text-center text-slate-400"></i>
-          <span>Search</span>
-        </button>
-        <button onclick="alert('Settings configured via brain CLI')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium text-xs transition text-left">
-          <i class="fa-solid fa-gear text-sm w-4 text-center text-slate-400"></i>
-          <span>Settings</span>
-        </button>
+
+        <!-- Live Instant Search Bar -->
+        <div class="relative pt-1">
+          <div class="relative flex items-center">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-400 text-xs pointer-events-none"></i>
+            <input 
+              type="text" 
+              id="searchInput" 
+              placeholder="Search nodes or projects..." 
+              oninput="handleSearch(this.value)"
+              onkeydown="handleSearchKey(event)"
+              class="w-full pl-8 pr-7 py-2 rounded-xl bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 text-xs focus:outline-none focus:border-blue-400 text-slate-800 placeholder-slate-400 transition"
+            />
+            <button id="btnClearSearch" onclick="clearSearch()" class="hidden absolute right-2.5 text-slate-400 hover:text-slate-600 text-xs">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <!-- Live Search Results Dropdown -->
+          <div id="searchResults" class="hidden mt-1.5 bg-white border border-slate-200 rounded-xl shadow-lg max-h-56 overflow-y-auto p-1.5 space-y-1 text-xs z-50"></div>
+        </div>
       </div>
 
-      <!-- Node Types Card (Bottom Left) -->
-      <div class="card-clean rounded-2xl p-4 mt-auto">
-        <h4 class="text-xs font-bold text-slate-900 pb-2.5 border-b border-slate-100 flex items-center gap-2">
-          <i class="fa-solid fa-layer-group text-slate-400"></i> Node Types
-        </h4>
-        <div class="space-y-2.5 mt-3 text-xs font-medium text-slate-700">
-          <div class="flex items-center gap-2.5 cursor-pointer hover:text-slate-900" onclick="filterByType('User')">
-            <span class="w-3 h-3 rounded-full bg-purple-500 shadow-xs"></span> User
-          </div>
-          <div class="flex items-center gap-2.5 cursor-pointer hover:text-slate-900" onclick="filterByType('Workspace')">
-            <span class="w-3 h-3 rounded-full bg-blue-500 shadow-xs"></span> Workspace
-          </div>
-          <div class="flex items-center gap-2.5 cursor-pointer hover:text-slate-900" onclick="filterByType('Project')">
-            <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-xs"></span> Project
-          </div>
-          <div class="flex items-center gap-2.5 cursor-pointer hover:text-slate-900" onclick="filterByType('Checkpoint')">
-            <span class="w-3 h-3 rounded-full bg-cyan-400 shadow-xs"></span> Checkpoint
-          </div>
-          <div class="flex items-center gap-2.5 cursor-pointer hover:text-slate-900" onclick="filterByType('Decision')">
-            <span class="w-3 h-3 rounded-full bg-amber-400 shadow-xs"></span> Decision
-          </div>
-          <div class="flex items-center gap-2.5 cursor-pointer hover:text-slate-900" onclick="filterByType('Task')">
-            <span class="w-3 h-3 rounded-full bg-rose-500 shadow-xs"></span> Blocker / Task
-          </div>
+      <!-- Node Types Card (Placed right below Nav Menu, 100% clearly visible!) -->
+      <div class="card-clean rounded-2xl p-4">
+        <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+          <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-layer-group text-slate-400"></i> Node Types
+          </h4>
+          <button onclick="filterByType('all')" class="text-[10px] text-blue-600 hover:text-blue-800 font-semibold transition">Show All</button>
+        </div>
+        <div class="space-y-1.5 mt-3 text-xs font-medium text-slate-700" id="nodeTypeList">
+          <!-- Populated dynamically with node counts -->
         </div>
       </div>
     </aside>
 
     <!-- Column 2: Center Main Graph View -->
-    <main class="flex-1 card-clean rounded-2xl flex flex-col relative overflow-hidden">
+    <main class="flex-1 card-clean rounded-2xl flex flex-col relative overflow-hidden h-full">
       <!-- Toolbar Header inside the Center Card -->
-      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between z-10 bg-white/90 backdrop-blur-sm">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between z-10 bg-white/95 backdrop-blur-sm">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
+          <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm shadow-xs">
             <i class="fa-solid fa-cube"></i>
           </div>
           <div>
@@ -131,23 +121,23 @@ export function getDashboardHtml(): string {
 
         <!-- Toolbar Buttons -->
         <div class="flex items-center gap-2.5">
-          <button onclick="toggleAutoRotate()" id="btnAutoRotate" class="px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 text-xs font-semibold flex items-center gap-1.5 transition">
+          <button onclick="toggleAutoRotate()" id="btnAutoRotate" class="px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs">
             <i class="fa-solid fa-play text-[11px]"></i> Auto-Rotate
           </button>
-          <button onclick="resetCamera()" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
-            <i class="fa-solid fa-rotate-left text-[11px]"></i> Reset View
+          <button onclick="resetCamera()" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition shadow-xs">
+            <i class="fa-solid fa-rotate-left text-[11px]"></i> Center View
           </button>
-          <button onclick="fitView()" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
-            <i class="fa-solid fa-expand text-[11px]"></i> Fit View
+          <button onclick="fitView()" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition shadow-xs">
+            <i class="fa-solid fa-expand text-[11px]"></i> Fit All
           </button>
-          <button onclick="alert('Second Brain Core v0.1.0 (Local)')" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
+          <button onclick="alert('Second Brain Core v0.1.0 (Local)')" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition shadow-xs">
             <i class="fa-solid fa-ellipsis"></i> More
           </button>
         </div>
       </div>
 
-      <!-- 3D WebGL Canvas Mount -->
-      <div id="graph3d-canvas" class="flex-1 w-full h-full relative z-0"></div>
+      <!-- 3D WebGL Canvas Mount (flex child with min-height: 0 so it centers accurately) -->
+      <div id="graph3d-canvas" class="flex-1 w-full relative z-0" style="min-height: 0; height: 100%;"></div>
     </main>
 
     <!-- Column 3: Right Inspector Panel (Node Details) -->
@@ -165,7 +155,7 @@ export function getDashboardHtml(): string {
       <!-- Avatar & Title with Edit Button -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div id="insAvatar" class="w-12 h-12 rounded-full bg-blue-500 shadow-md shadow-blue-200 flex items-center justify-center text-white text-lg">
+          <div id="insAvatar" class="w-12 h-12 rounded-full bg-blue-600 shadow-md shadow-blue-200 flex items-center justify-center text-white text-lg font-bold">
             <i class="fa-regular fa-folder"></i>
           </div>
           <div>
@@ -190,7 +180,7 @@ export function getDashboardHtml(): string {
         <div class="flex items-center justify-between py-1">
           <span class="text-slate-500 flex items-center gap-2"><i class="fa-solid fa-shapes text-slate-400 w-3.5"></i> Type</span>
           <span id="insType" class="font-medium text-slate-800 flex items-center gap-1.5">
-            <span id="insTypeDot" class="w-2 h-2 rounded-full bg-blue-500"></span> Workspace
+            <span id="insTypeDot" class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Workspace
           </span>
         </div>
         <div class="flex items-center justify-between py-1">
@@ -199,11 +189,11 @@ export function getDashboardHtml(): string {
         </div>
         <div class="flex items-center justify-between py-1">
           <span class="text-slate-500 flex items-center gap-2"><i class="fa-regular fa-calendar text-slate-400 w-3.5"></i> Created</span>
-          <span id="insCreated" class="font-medium text-slate-700">Oct 27, 2026 20:15</span>
+          <span id="insCreated" class="font-medium text-slate-700">Oct 27, 2026</span>
         </div>
         <div class="flex items-center justify-between py-1">
           <span class="text-slate-500 flex items-center gap-2"><i class="fa-regular fa-clock text-slate-400 w-3.5"></i> Last Updated</span>
-          <span id="insUpdated" class="font-medium text-slate-700">Oct 27, 2026 20:15</span>
+          <span id="insUpdated" class="font-medium text-slate-700">Oct 27, 2026</span>
         </div>
       </div>
 
@@ -228,7 +218,7 @@ export function getDashboardHtml(): string {
       </div>
 
       <!-- View Full Details Action Button -->
-      <button onclick="alert('Viewing comprehensive state for ' + document.getElementById('insId').textContent)" class="w-full py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 text-xs font-bold transition flex items-center justify-center gap-2 mt-auto">
+      <button onclick="alert('Viewing comprehensive state for ' + document.getElementById('insId').textContent)" class="w-full py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 text-xs font-bold transition flex items-center justify-center gap-2 mt-auto shadow-xs">
         <i class="fa-solid fa-arrow-up-right-from-square"></i> View full details →
       </button>
     </aside>
@@ -240,22 +230,23 @@ export function getDashboardHtml(): string {
     let graphData = { nodes: [], links: [] };
     let activeProjectId = '';
 
+    // Solid, Rich, Dark Colors (No washed out transparency!)
     const typeColors = {
-      User: '#8b5cf6',
-      Workspace: '#3b82f6',
-      Project: '#10b981',
-      Checkpoint: '#06b6d4',
-      Decision: '#f59e0b',
-      Task: '#f43f5e',
+      Workspace: '#1d4ed8',   // Solid Deep Cobalt Blue
+      Project: '#047857',     // Solid Deep Emerald Green
+      Checkpoint: '#0284c7',  // Solid Deep Ocean Cyan
+      Decision: '#b45309',    // Solid Deep Amber / Bronze
+      Task: '#be123c',        // Solid Deep Crimson Red
+      User: '#6d28d9',        // Solid Deep Royal Purple
     };
 
     const typeIcons = {
-      User: 'fa-user',
       Workspace: 'fa-folder',
       Project: 'fa-folder-open',
       Checkpoint: 'fa-flag',
       Decision: 'fa-code-branch',
       Task: 'fa-exclamation',
+      User: 'fa-user',
     };
 
     async function loadData() {
@@ -270,6 +261,7 @@ export function getDashboardHtml(): string {
         if (graphRes.ok) {
           graphData = await graphRes.json();
           init3DGraph(graphData);
+          updateNodeTypesLegend(graphData);
         }
       } catch (err) {
         console.error('Failed to load data:', err);
@@ -277,49 +269,61 @@ export function getDashboardHtml(): string {
     }
 
     function init3DGraph(data) {
+      const container = document.getElementById('graph3d-canvas');
+      if (!container) return;
+
       if (graph3DInstance) {
         graph3DInstance.graphData(data);
+        updateNodeTypesLegend(data);
         return;
       }
 
-      const container = document.getElementById('graph3d-canvas');
+      // Explicit pixel measurement of container to guarantee dead-center alignment
+      const w = container.clientWidth || 800;
+      const h = container.clientHeight || 600;
 
       graph3DInstance = ForceGraph3D()(container)
+        .width(w)
+        .height(h)
         .graphData(data)
         .backgroundColor('#ffffff')
         .showNavInfo(false)
         .nodeThreeObject(node => {
           const group = new THREE.Group();
-          const nodeColor = node.color || typeColors[node.type] || '#3b82f6';
-          const size = node.type === 'Workspace' ? 14 : node.type === 'Project' ? 13 : node.type === 'Checkpoint' ? 10 : 8;
+          const nodeColor = node.color || typeColors[node.type] || '#1d4ed8';
+          const size = node.type === 'Workspace' ? 14 : node.type === 'Project' ? 13 : node.type === 'Checkpoint' ? 11 : 9;
 
-          // Outer Soft Glow Halo
-          const haloGeo = new THREE.SphereGeometry(size * 1.35, 24, 24);
-          const haloMat = new THREE.MeshBasicMaterial({
-            color: nodeColor,
-            transparent: true,
-            opacity: 0.18,
-          });
-          const halo = new THREE.Mesh(haloGeo, haloMat);
-          group.add(halo);
-
-          // Inner Vibrant Sphere
+          // Inner Solid Dark Vibrant Glossy Sphere (NO transparency!)
           const geometry = new THREE.SphereGeometry(size, 32, 32);
-          const material = new THREE.MeshLambertMaterial({
-            color: nodeColor,
-            transparent: true,
-            opacity: 0.95,
+          const material = new THREE.MeshPhongMaterial({
+            color: new THREE.Color(nodeColor),
+            emissive: new THREE.Color(nodeColor).multiplyScalar(0.22),
+            specular: new THREE.Color(0xffffff),
+            shininess: 70,
+            transparent: false,
+            opacity: 1.0,
           });
           const sphere = new THREE.Mesh(geometry, material);
           group.add(sphere);
+
+          // Subtle Outer Ring for crisp 3D definition
+          const ringGeo = new THREE.RingGeometry(size * 1.15, size * 1.25, 32);
+          const ringMat = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(nodeColor),
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.45,
+          });
+          const ring = new THREE.Mesh(ringGeo, ringMat);
+          group.add(ring);
 
           // 2D Text Label right underneath node
           const labelText = node.name || node.type || node.id;
           const sprite = new SpriteText(labelText);
           sprite.color = '#0f172a';
-          sprite.textHeight = 4.0;
+          sprite.textHeight = 4.4;
           sprite.fontWeight = 'bold';
-          sprite.position.y = -size - 5.5;
+          sprite.position.y = -size - 6.2;
           group.add(sprite);
 
           // Count badge right below label
@@ -327,65 +331,130 @@ export function getDashboardHtml(): string {
             l => (l.source.id || l.source) === node.id || (l.target.id || l.target) === node.id
           ).length;
           const badge = new SpriteText(String(connectionCount));
-          badge.color = '#64748b';
-          badge.textHeight = 3.2;
-          badge.position.y = -size - 10.5;
+          badge.color = '#475569';
+          badge.textHeight = 3.3;
+          badge.fontWeight = 'bold';
+          badge.position.y = -size - 11.8;
           group.add(badge);
 
           return group;
         })
-        .linkColor(() => '#cbd5e1')
-        .linkWidth(1.2)
+        .linkColor(() => '#94a3b8')
+        .linkWidth(1.4)
         .linkDirectionalParticles(2)
         .linkDirectionalParticleSpeed(0.0035)
-        .linkDirectionalParticleWidth(1.5)
-        .linkDirectionalParticleColor(() => '#94a3b8')
+        .linkDirectionalParticleWidth(1.8)
+        .linkDirectionalParticleColor(() => '#64748b')
         .onNodeClick(node => {
           focusOnNode(node);
           inspectNode(node);
         });
 
-      // Lighting & Ambience
+      // Lighting & Ambience for Solid Spheres
       const scene = graph3DInstance.scene();
 
-      // Soft white ambient light
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
+      // Ambient light
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
       scene.add(ambientLight);
 
-      // Key light
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.65);
-      dirLight.position.set(120, 200, 150);
-      scene.add(dirLight);
+      // Key light for crisp highlights
+      const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+      keyLight.position.set(160, 220, 180);
+      scene.add(keyLight);
 
-      // Camera Position
-      graph3DInstance.cameraPosition({ x: 0, y: 15, z: 230 }, { x: 0, y: 0, z: 0 }, 1000);
+      // Fill light from bottom-left
+      const fillLight = new THREE.DirectionalLight(0xffffff, 0.35);
+      fillLight.position.set(-160, -100, -120);
+      scene.add(fillLight);
 
-      // Select first node (e.g. Workspace or Project) by default
+      // Initial Camera Position centered directly at (0, 0, 0)
+      graph3DInstance.cameraPosition({ x: 0, y: 0, z: 240 }, { x: 0, y: 0, z: 0 }, 600);
+
+      // Fit and center view after initial simulation stabilizes
+      setTimeout(() => {
+        if (graph3DInstance) {
+          graph3DInstance.zoomToFit(700, 50);
+        }
+      }, 500);
+
+      // Select default node (Workspace or Project) in Inspector
       const defaultNode = data.nodes.find(n => n.type === 'Workspace') || data.nodes[0];
       if (defaultNode) {
         inspectNode(defaultNode);
       }
 
-      // Auto-Orbit Loop
+      // Auto-Orbit Loop: Kept locked strictly on center (0, 0, 0)
       let angle = 0;
       setInterval(() => {
         if (isAutoRotating && graph3DInstance) {
-          angle += Math.PI / 1800;
-          graph3DInstance.cameraPosition({
-            x: 230 * Math.sin(angle),
-            z: 230 * Math.cos(angle)
-          });
+          angle += Math.PI / 2400;
+          const dist = 240;
+          graph3DInstance.cameraPosition(
+            {
+              x: dist * Math.sin(angle),
+              y: 15 * Math.sin(angle * 0.7),
+              z: dist * Math.cos(angle)
+            },
+            { x: 0, y: 0, z: 0 } // Keeps camera locked in center!
+          );
         }
       }, 25);
+
+      // ResizeObserver to always keep canvas matched to container size
+      const handleResize = () => {
+        if (!graph3DInstance || !container) return;
+        const curW = container.clientWidth;
+        const curH = container.clientHeight;
+        if (curW > 0 && curH > 0) {
+          graph3DInstance.width(curW);
+          graph3DInstance.height(curH);
+        }
+      };
+
+      if (window.ResizeObserver) {
+        new ResizeObserver(handleResize).observe(container);
+      }
+      window.addEventListener('resize', handleResize);
+    }
+
+    function updateNodeTypesLegend(data) {
+      const counts = { Workspace: 0, Project: 0, Checkpoint: 0, Decision: 0, Task: 0, User: 0 };
+      for (const n of data.nodes) {
+        if (counts[n.type] !== undefined) counts[n.type]++;
+        else counts[n.type] = (counts[n.type] || 0) + 1;
+      }
+      const legendEl = document.getElementById('nodeTypeList');
+      if (!legendEl) return;
+
+      const types = [
+        { type: 'Workspace', color: '#1d4ed8', label: 'Workspace' },
+        { type: 'Project', color: '#047857', label: 'Project' },
+        { type: 'Checkpoint', color: '#0284c7', label: 'Checkpoint' },
+        { type: 'Decision', color: '#b45309', label: 'Decision' },
+        { type: 'Task', color: '#be123c', label: 'Blocker / Task' },
+        { type: 'User', color: '#6d28d9', label: 'User / Founder' },
+      ];
+
+      legendEl.innerHTML = types.map(t => \`
+        <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl hover:bg-slate-50 cursor-pointer transition text-xs" onclick="filterByType('\${t.type}')">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full shadow-xs" style="background-color: \${t.color}"></span>
+            <span class="text-slate-700 font-medium">\${t.label}</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">\${counts[t.type] || 0}</span>
+        </div>
+      \`).join('');
     }
 
     function focusOnNode(node) {
-      const distance = 80;
-      const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+      if (!node || !graph3DInstance) return;
+      const distance = 85;
+      const hyp = Math.hypot(node.x || 0, node.y || 0, node.z || 0) || 1;
+      const distRatio = 1 + distance / hyp;
       graph3DInstance.cameraPosition(
-        { x: node.x * distRatio, y: node.y * distRatio + 5, z: node.z * distRatio },
+        { x: (node.x || 0) * distRatio, y: (node.y || 0) * distRatio + 8, z: (node.z || 0) * distRatio },
         node,
-        1400
+        1200
       );
     }
 
@@ -393,10 +462,10 @@ export function getDashboardHtml(): string {
       const panel = document.getElementById('inspectorPanel');
       panel.classList.remove('hidden');
 
-      const color = node.color || typeColors[node.type] || '#3b82f6';
+      const color = node.color || typeColors[node.type] || '#1d4ed8';
       const avatar = document.getElementById('insAvatar');
       avatar.style.backgroundColor = color;
-      avatar.style.boxShadow = \`0 8px 20px -3px \${color}55\`;
+      avatar.style.boxShadow = \`0 8px 20px -3px \${color}66\`;
 
       const iconClass = typeIcons[node.type] || 'fa-circle';
       avatar.innerHTML = \`<i class="fa-solid \${iconClass}"></i>\`;
@@ -404,7 +473,7 @@ export function getDashboardHtml(): string {
       document.getElementById('insTitle').textContent = node.name || node.id;
       document.getElementById('insSubtitle').textContent = node.type + ' Node';
       document.getElementById('insId').textContent = node.id;
-      document.getElementById('insType').innerHTML = \`<span class="w-2 h-2 rounded-full" style="background-color: \${color}"></span> \${node.type}\`;
+      document.getElementById('insType').innerHTML = \`<span class="w-2.5 h-2.5 rounded-full" style="background-color: \${color}"></span> \${node.type}\`;
 
       // Find Connected Nodes
       const connected = [];
@@ -422,7 +491,7 @@ export function getDashboardHtml(): string {
 
       document.getElementById('insConnections').textContent = connected.length;
 
-      const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       document.getElementById('insCreated').textContent = dateStr;
       document.getElementById('insUpdated').textContent = dateStr;
 
@@ -433,24 +502,25 @@ export function getDashboardHtml(): string {
       else if (node.type === 'Checkpoint') note = 'Cognitive snapshot saving progress, open tasks, blockers, and stop reason.';
       else if (node.type === 'Decision') note = 'Architectural decision preserved across model context boundaries.';
       else if (node.type === 'Task') note = 'Action item or blocker flagged for continuation.';
+      else if (node.type === 'User') note = 'Master User Profile & Founder context.';
       document.getElementById('insNotes').textContent = note;
 
       // Render Connected Nodes List
       const connectedListEl = document.getElementById('insConnectedList');
       if (connected.length === 0) {
-        connectedListEl.innerHTML = '<div class="text-slate-400 italic text-[11px]">No direct connections.</div>';
+        connectedListEl.innerHTML = '<div class="text-slate-400 italic text-[11px] p-1">No direct connections.</div>';
       } else {
         connectedListEl.innerHTML = connected.map(c => {
-          const cColor = c.color || typeColors[c.type] || '#3b82f6';
+          const cColor = c.color || typeColors[c.type] || '#1d4ed8';
           return \`
-            <div class="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-slate-50 cursor-pointer text-xs" onclick='selectNodeById("\${c.id}")'>
+            <div class="flex items-center justify-between py-1.5 px-2 rounded-xl hover:bg-slate-50 cursor-pointer text-xs border border-transparent hover:border-slate-100 transition" onclick='selectNodeById("\${c.id}")'>
               <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full" style="background-color: \${cColor}"></span>
                 <span class="font-medium text-slate-800">\${c.name || c.id}</span>
               </div>
-              <div class="flex items-center gap-1.5 text-slate-400 font-mono text-[11px]">
+              <div class="flex items-center gap-1.5 text-slate-400 font-mono text-[10px]">
                 <span>\${c.id.substring(0, 8)}</span>
-                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
               </div>
             </div>
           \`;
@@ -474,20 +544,26 @@ export function getDashboardHtml(): string {
       isAutoRotating = !isAutoRotating;
       const btn = document.getElementById('btnAutoRotate');
       btn.className = isAutoRotating
-        ? 'px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 text-xs font-semibold flex items-center gap-1.5 transition'
-        : 'px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-semibold flex items-center gap-1.5 transition';
+        ? 'px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs'
+        : 'px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs';
     }
 
     function resetCamera() {
       if (graph3DInstance) {
-        graph3DInstance.cameraPosition({ x: 0, y: 15, z: 230 }, { x: 0, y: 0, z: 0 }, 1000);
+        graph3DInstance.cameraPosition({ x: 0, y: 0, z: 240 }, { x: 0, y: 0, z: 0 }, 800);
       }
     }
 
     function fitView() {
       if (graph3DInstance) {
-        graph3DInstance.zoomToFit(1000, 40);
+        graph3DInstance.zoomToFit(800, 50);
       }
+    }
+
+    function resetGraphView() {
+      clearSearch();
+      filterByType('all');
+      fitView();
     }
 
     function copyNodeId() {
@@ -508,22 +584,78 @@ export function getDashboardHtml(): string {
         );
         graph3DInstance.graphData({ nodes: filteredNodes, links: filteredLinks });
       }
+      setTimeout(() => fitView(), 200);
     }
 
-    function focusSearch() {
-      const term = prompt('Enter node name or ID to search:');
-      if (term) {
-        const found = graphData.nodes.find(n => 
-          (n.name && n.name.toLowerCase().includes(term.toLowerCase())) ||
-          n.id.toLowerCase().includes(term.toLowerCase())
-        );
-        if (found) {
-          focusOnNode(found);
-          inspectNode(found);
-        } else {
-          alert('No node found matching "' + term + '"');
-        }
+    // Instant Search functionality
+    function handleSearch(query) {
+      const resultsEl = document.getElementById('searchResults');
+      const clearBtn = document.getElementById('btnClearSearch');
+      const q = query.trim().toLowerCase();
+
+      if (!q) {
+        resultsEl.classList.add('hidden');
+        clearBtn.classList.add('hidden');
+        return;
       }
+
+      clearBtn.classList.remove('hidden');
+
+      const matches = graphData.nodes.filter(n => 
+        (n.name && n.name.toLowerCase().includes(q)) ||
+        (n.type && n.type.toLowerCase().includes(q)) ||
+        (n.id && n.id.toLowerCase().includes(q))
+      );
+
+      if (matches.length === 0) {
+        resultsEl.innerHTML = '<div class="text-slate-400 italic text-[11px] p-2 text-center">No matching nodes found</div>';
+        resultsEl.classList.remove('hidden');
+        return;
+      }
+
+      resultsEl.innerHTML = matches.slice(0, 8).map(m => {
+        const cColor = typeColors[m.type] || '#1d4ed8';
+        return \`
+          <div class="flex items-center justify-between p-2 rounded-lg hover:bg-blue-50/70 cursor-pointer transition" onclick='onSelectSearchResult("\${m.id}")'>
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full" style="background-color: \${cColor}"></span>
+              <span class="font-semibold text-slate-800 text-xs">\${m.name || m.id}</span>
+            </div>
+            <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 font-medium">\${m.type}</span>
+          </div>
+        \`;
+      }).join('');
+      resultsEl.classList.remove('hidden');
+    }
+
+    function handleSearchKey(event) {
+      if (event.key === 'Enter') {
+        const resultsEl = document.getElementById('searchResults');
+        const firstMatch = resultsEl.querySelector('[onclick]');
+        if (firstMatch) {
+          firstMatch.click();
+        }
+      } else if (event.key === 'Escape') {
+        clearSearch();
+      }
+    }
+
+    function onSelectSearchResult(nodeId) {
+      const node = graphData.nodes.find(n => n.id === nodeId);
+      if (node) {
+        document.getElementById('searchInput').value = node.name || node.id;
+        document.getElementById('searchResults').classList.add('hidden');
+        focusOnNode(node);
+        inspectNode(node);
+      }
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('searchInput');
+      input.value = '';
+      document.getElementById('searchResults').classList.add('hidden');
+      document.getElementById('btnClearSearch').classList.add('hidden');
+      fitView();
     }
 
     async function copyResumePrompt(model) {
@@ -539,10 +671,6 @@ export function getDashboardHtml(): string {
       } catch (err) {
         alert('Failed to copy prompt: ' + err.message);
       }
-    }
-
-    function toggleDashboardMode() {
-      window.location.href = '/';
     }
 
     function toggleTheme() {
