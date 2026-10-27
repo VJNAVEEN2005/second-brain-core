@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Second Brain Core — Universal Memory Layer for AI Systems</title>
+  <meta name="description" content="Local-first cognitive substrate and universal memory layer for AI agents, Claude, Gemini, GPT, Cursor, and Copilot.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" type="image/png" href="../assets/logo.png">
+  <style>
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(1deg); }
+    }
+    .floating-logo {
+      animation: float 5s ease-in-out infinite;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    }
+    .glow-blue {
+      box-shadow: 0 0 40px -10px rgba(37, 99, 235, 0.35);
+    }
+  </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800 font-sans antialiased overflow-x-hidden selection:bg-blue-100 selection:text-blue-900">
+
+  <!-- Navigation Bar -->
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-3 group">
+        <img src="../assets/logo.png" alt="Second Brain Core Logo" class="w-10 h-10 rounded-xl object-contain shadow-xs group-hover:scale-105 transition" />
+        <div>
+          <span class="font-extrabold text-base tracking-tight text-slate-900">Second Brain Core</span>
+          <span class="block text-[10px] text-slate-500 font-medium -mt-0.5">Universal AI Memory</span>
+        </div>
+      </a>
+
+      <div class="hidden md:flex items-center gap-8 text-xs font-semibold text-slate-600">
+        <a href="#overview" class="hover:text-blue-600 transition">Overview</a>
+        <a href="#architecture" class="hover:text-blue-600 transition">Architecture</a>
+        <a href="#cosmos" class="hover:text-blue-600 transition">3D Cosmos</a>
+        <a href="#skill" class="hover:text-blue-600 transition">Agent Skill</a>
+        <a href="#quickstart" class="hover:text-blue-600 transition">Quickstart</a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="https://github.com/VJNAVEEN2005/second-brain-core" target="_blank" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold flex items-center gap-2 shadow-sm transition">
+          <i class="fa-brands fa-github text-sm"></i> Star on GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="relative pt-20 pb-28 px-6 overflow-hidden">
+    <!-- Background Accents -->
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-tr from-blue-200/40 via-cyan-100/30 to-purple-200/30 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+
+    <div class="max-w-5xl mx-auto text-center flex flex-col items-center">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-semibold mb-6">
+        <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+        Open Source • 100% Local-First • Zero Cloud Lock-in
+      </div>
+
+      <div class="mb-6 floating-logo">
+        <img src="../assets/logo.png" alt="Second Brain Core" class="w-28 h-28 mx-auto rounded-3xl object-contain drop-shadow-xl p-1 bg-white border border-slate-100" />
+      </div>
+
+      <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 leading-[1.1] mb-6">
+        Universal Memory Layer for <br class="hidden sm:block" />
+        <span class="gradient-text">AI Systems & Agents</span>
+      </h1>
+
+      <p class="text-base sm:text-xl text-slate-600 max-w-2xl font-normal leading-relaxed mb-8">
+        <em>"Models are temporary. Memory is permanent."</em><br>
+        Stop losing your code context, sprint goals, and technical decisions across Claude, Gemini, GPT, Cursor, and Copilot sessions.
+      </p>
+
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <a href="#quickstart" class="px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/25 transition flex items-center gap-2">
+          <i class="fa-solid fa-bolt"></i> Get Started in 60s
+        </a>
+        <a href="#skill" class="px-6 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/90 font-bold text-sm shadow-xs transition flex items-center gap-2">
+          <i class="fa-solid fa-copy text-blue-600"></i> Copy AI Agent Skill
+        </a>
+      </div>
+
+      <!-- Feature Badges -->
+      <div class="mt-12 flex flex-wrap justify-center gap-6 text-xs text-slate-500 font-semibold">
+        <div class="flex items-center gap-2"><i class="fa-solid fa-hard-drive text-emerald-500"></i> Local-First (`~/.second-brain/`)</div>
+        <div class="flex items-center gap-2"><i class="fa-solid fa-cube text-blue-500"></i> Interactive 3D WebGL Cosmos</div>
+        <div class="flex items-center gap-2"><i class="fa-solid fa-plug text-purple-500"></i> Model Context Protocol (MCP)</div>
+        <div class="flex items-center gap-2"><i class="fa-solid fa-crown text-amber-500"></i> Founder / CEO Reasoning Mode</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Agent Skill Section -->
+  <section id="skill" class="py-20 px-6 bg-slate-900 text-white relative">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-10">
+        <span class="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-semibold uppercase tracking-wider">Zero Setup</span>
+        <h2 class="text-3xl font-black mt-3">Universal AI Agent Skill Prompt</h2>
+        <p class="text-slate-400 text-sm mt-2 max-w-xl mx-auto">
+          Copy this prompt into Cursor Rules (<code class="text-blue-300">.cursorrules</code>), Claude Project Instructions, Custom GPT, or Gemini. Any AI will automatically read your memory at start and checkpoint before exit.
+        </p>
+      </div>
+
+      <!-- Copyable Prompt Card -->
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+        <div class="px-5 py-3.5 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+            <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+            <span class="ml-2 text-xs font-mono text-slate-400">second-brain-skill.md</span>
+          </div>
+          <button onclick="copySkillPrompt()" id="btnCopyPrompt" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-2">
+            <i class="fa-regular fa-copy"></i> Copy Prompt
+          </button>
+        </div>
+
+        <pre class="p-6 font-mono text-xs sm:text-sm text-slate-300 overflow-x-auto leading-relaxed" id="skillPromptContent"><code><!-- SECOND BRAIN CORE INSTRUCTION -->
+You are connected to Second Brain Core. Follow this protocol strictly:
+1. At the start of this session, execute `brain status` (or call MCP tool `brain_status`) to load the active project, current task, progress, and architectural decisions.
+2. Maintain strict continuity with all previous decisions recorded in Second Brain.
+3. If I ask you to make a major architectural decision, save it with: `brain remember "&lt;decision&gt;" --tags architecture`.
+4. When our session concludes or a major milestone is reached, create a checkpoint:
+   `brain checkpoint "&lt;summary&gt;" --next "&lt;next task&gt;" --progress &lt;0-100&gt;`.
+5. Check my stored profile and executive goals with `brain identity show`.</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture Breakdown with Visual Cards & Flow -->
+  <section id="architecture" class="py-20 px-6 max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <span class="text-blue-600 text-xs font-bold uppercase tracking-wider">Cognitive Engine</span>
+      <h2 class="text-3xl font-black text-slate-900 mt-2">4-Tier Memory Architecture</h2>
+      <p class="text-slate-600 text-sm mt-2 max-w-xl mx-auto">
+        Instead of dumping hundreds of raw chat messages into token-expensive contexts, Second Brain hierarchically organizes memory for maximum recall and minimum token waste.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <!-- Tier 1 -->
+      <div class="glass-card rounded-2xl p-6 border-t-4 border-t-rose-500 flex flex-col justify-between hover:shadow-lg transition">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-lg mb-4">
+            ⚡
+          </div>
+          <h3 class="text-base font-bold text-slate-900">Working Memory</h3>
+          <p class="text-xs text-rose-600 font-semibold mt-0.5">Budget: &le; 1,000 tokens</p>
+          <p class="text-xs text-slate-600 mt-3 leading-relaxed">
+            Immediate active task, current blocker, and next actionable step. Always injected into every prompt.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] font-mono text-slate-500">
+          Auto-refreshed on start
+        </div>
+      </div>
+
+      <!-- Tier 2 -->
+      <div class="glass-card rounded-2xl p-6 border-t-4 border-t-amber-500 flex flex-col justify-between hover:shadow-lg transition">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg mb-4">
+            🔥
+          </div>
+          <h3 class="text-base font-bold text-slate-900">Hot Memory</h3>
+          <p class="text-xs text-amber-600 font-semibold mt-0.5">Active Sprint State</p>
+          <p class="text-xs text-slate-600 mt-3 leading-relaxed">
+            Active milestones, sprint goals, and open architectural choices made in the last 48 hours.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] font-mono text-slate-500">
+          Queried on demand
+        </div>
+      </div>
+
+      <!-- Tier 3 -->
+      <div class="glass-card rounded-2xl p-6 border-t-4 border-t-blue-500 flex flex-col justify-between hover:shadow-lg transition">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg mb-4">
+            🌊
+          </div>
+          <h3 class="text-base font-bold text-slate-900">Warm Memory</h3>
+          <p class="text-xs text-blue-600 font-semibold mt-0.5">Semantic Knowledge</p>
+          <p class="text-xs text-slate-600 mt-3 leading-relaxed">
+            Research documents, tech stack evaluations, past meeting notes, and verified benchmark scores.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] font-mono text-slate-500">
+          Vector & Tag Search
+        </div>
+      </div>
+
+      <!-- Tier 4 -->
+      <div class="glass-card rounded-2xl p-6 border-t-4 border-t-slate-500 flex flex-col justify-between hover:shadow-lg transition">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-lg mb-4">
+            ❄️
+          </div>
+          <h3 class="text-base font-bold text-slate-900">Cold Memory</h3>
+          <p class="text-xs text-slate-500 font-semibold mt-0.5">Historical Archive</p>
+          <p class="text-xs text-slate-600 mt-3 leading-relaxed">
+            Immutable event logs, archived checkpoints, and session diffs. Never pollutes context token limits.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] font-mono text-slate-500">
+          Immutable event log
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3D Cosmos Visual Showcase -->
+  <section id="cosmos" class="py-20 px-6 bg-slate-50 border-y border-slate-200/80">
+    <div class="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12">
+      <div class="lg:w-1/2">
+        <span class="text-blue-600 text-xs font-bold uppercase tracking-wider">Visual Knowledge Map</span>
+        <h2 class="text-3xl sm:text-4xl font-black text-slate-900 mt-2 leading-tight">
+          Explore Your Thinking in a <span class="gradient-text">3D WebGL Cosmos</span>
+        </h2>
+        <p class="text-slate-600 text-sm mt-4 leading-relaxed">
+          Second Brain doesn't hide your knowledge in invisible files. Run <code class="px-2 py-0.5 rounded bg-white border border-slate-200 text-xs font-bold text-blue-600">brain 3d</code> to launch an ultra-clean, real-time 3D interactive force graph of your entire workspace.
+        </p>
+
+        <ul class="mt-6 space-y-3 text-xs font-semibold text-slate-700">
+          <li class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-xs"><i class="fa-solid fa-check"></i></span>
+            Solid, vibrant glossy spheres representing Projects, Checkpoints, and Decisions
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs"><i class="fa-solid fa-check"></i></span>
+            Instant real-time search with smooth 3D camera fly-to animation
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xs"><i class="fa-solid fa-check"></i></span>
+            One-click prompt generators for Gemini (Markdown) and Claude (XML)
+          </li>
+        </ul>
+
+        <div class="mt-8">
+          <a href="http://127.0.0.1:3000/?3d=true" target="_blank" class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition inline-flex items-center gap-2">
+            <i class="fa-solid fa-cube"></i> Launch Local 3D Cosmos
+          </a>
+        </div>
+      </div>
+
+      <div class="lg:w-1/2 w-full">
+        <div class="glass-card rounded-2xl p-2 border border-slate-200 shadow-xl overflow-hidden group">
+          <div class="bg-slate-900 rounded-xl p-6 text-center text-white relative min-h-[340px] flex flex-col justify-center items-center">
+            <img src="../assets/logo.png" alt="3D Cosmos" class="w-20 h-20 floating-logo mb-4" />
+            <h4 class="text-lg font-bold">3D Knowledge Force Graph</h4>
+            <p class="text-xs text-slate-400 mt-1 max-w-sm">
+              Workspaces • Projects • Checkpoints • Decisions • Tasks • Founder
+            </p>
+            <div class="mt-6 flex gap-2">
+              <span class="px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[11px] font-mono">brain 3d</span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-mono">port 3000</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quickstart Commands -->
+  <section id="quickstart" class="py-20 px-6 max-w-4xl mx-auto">
+    <div class="text-center mb-12">
+      <span class="text-blue-600 text-xs font-bold uppercase tracking-wider">Fast Setup</span>
+      <h2 class="text-3xl font-black text-slate-900 mt-2">Get Started in 60 Seconds</h2>
+      <p class="text-slate-600 text-sm mt-2">Everything runs locally on your machine with Node.js 22+.</p>
+    </div>
+
+    <div class="space-y-4">
+      <!-- Step 1 -->
+      <div class="glass-card rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold text-blue-600 uppercase">Step 1 • Install Globally</span>
+          <p class="text-sm font-semibold text-slate-800 mt-0.5">Clone & Link CLI</p>
+        </div>
+        <div class="bg-slate-900 text-slate-200 px-4 py-2.5 rounded-xl font-mono text-xs flex items-center justify-between gap-4">
+          <code>git clone https://github.com/VJNAVEEN2005/second-brain-core.git && cd second-brain-core && npm install && npm run build && npm link</code>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="glass-card rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold text-blue-600 uppercase">Step 2 • Check Status</span>
+          <p class="text-sm font-semibold text-slate-800 mt-0.5">View Cognitive Memory</p>
+        </div>
+        <div class="bg-slate-900 text-slate-200 px-4 py-2.5 rounded-xl font-mono text-xs">
+          <code>brain status</code>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="glass-card rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold text-blue-600 uppercase">Step 3 • Launch 3D Graph</span>
+          <p class="text-sm font-semibold text-slate-800 mt-0.5">Open Cosmos in Browser</p>
+        </div>
+        <div class="bg-slate-900 text-slate-200 px-4 py-2.5 rounded-xl font-mono text-xs">
+          <code>brain 3d</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-12 px-6">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <img src="../assets/logo.png" alt="Second Brain Core" class="w-8 h-8 rounded-lg object-contain" />
+        <span class="font-bold text-sm text-slate-800">Second Brain Core</span>
+      </div>
+
+      <p class="text-xs text-slate-500">
+        Created by <span class="font-bold text-slate-700">Naveen (VJNAVEEN)</span> • Licensed under Apache-2.0
+      </p>
+
+      <div class="flex items-center gap-4 text-xs font-semibold text-slate-600">
+        <a href="https://github.com/VJNAVEEN2005/second-brain-core" target="_blank" class="hover:text-blue-600 transition"><i class="fa-brands fa-github text-sm"></i> GitHub</a>
+        <a href="https://github.com/VJNAVEEN2005/second-brain-core/blob/main/LICENSE" target="_blank" class="hover:text-blue-600 transition">License</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function copySkillPrompt() {
+      const code = document.getElementById('skillPromptContent').innerText;
+      navigator.clipboard.writeText(code);
+      const btn = document.getElementById('btnCopyPrompt');
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      btn.classList.add('bg-emerald-600');
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy Prompt';
+        btn.classList.remove('bg-emerald-600');
+      }, 2500);
+    }
+  </script>
+</body>
+</html>

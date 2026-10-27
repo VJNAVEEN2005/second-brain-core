@@ -1,16 +1,33 @@
 {
   "name": "second-brain-core",
   "version": "0.1.0",
-  "description": "Universal Memory Layer for AI Systems",
+  "description": "Universal Memory Layer and Cognitive Continuation Substrate for AI Systems & Autonomous Developers",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "second-brain-core": "./dist/cli/index.js",
     "brain": "./dist/cli/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "assets",
+    "skills",
+    "docs",
+    "README.md",
+    "LICENSE"
   ],
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VJNAVEEN2005/second-brain-core.git"
+  },
+  "homepage": "https://github.com/VJNAVEEN2005/second-brain-core#readme",
+  "bugs": {
+    "url": "https://github.com/VJNAVEEN2005/second-brain-core/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
@@ -23,11 +40,18 @@
     "memory",
     "context",
     "checkpoint",
+    "claude",
+    "gemini",
+    "gpt",
+    "cursor",
+    "copilot",
+    "mcp",
+    "model-context-protocol",
     "fastify",
     "typescript",
     "second-brain"
   ],
-  "author": "Naveen",
+  "author": "Naveen (VJNAVEEN) <https://github.com/VJNAVEEN2005>",
   "license": "Apache-2.0",
   "dependencies": {
     "@fastify/cors": "^10.0.2",

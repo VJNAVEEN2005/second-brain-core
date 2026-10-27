@@ -214,6 +214,70 @@ program
   });
 
 // ==========================================
+// SERVER LAUNCH HELPER (AUTO-DETECT & FALLBACK)
+// ==========================================
+async function openOrLaunchServer(requestedPort: number, path: string = ''): Promise<void> {
+  let port = requestedPort;
+
+  // First, check if Second Brain is already running on requestedPort
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/health`);
+    if (res.ok) {
+      const data: any = await res.json();
+      if (data && data.service === 'second-brain-core') {
+        const url = `http://127.0.0.1:${port}${path}`;
+        console.log(`\n🧠 Second Brain is already active at http://127.0.0.1:${port}`);
+        console.log(`   Opening in your browser: ${url}\n`);
+        const startCmd =
+          process.platform === 'win32'
+            ? `start ${url}`
+            : process.platform === 'darwin'
+            ? `open ${url}`
+            : `xdg-open ${url}`;
+        exec(startCmd);
+        return;
+      }
+    }
+  } catch {
+    // Port not occupied by Second Brain, proceed to bind
+  }
+
+  let serverStarted = false;
+  const maxAttempts = 10;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const app = await buildServer(brain, { logger: false });
+      await app.listen({ port, host: '127.0.0.1' });
+      serverStarted = true;
+      break;
+    } catch (err: any) {
+      if (err.code === 'EADDRINUSE') {
+        port++;
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  if (!serverStarted) {
+    console.error(`Error: Could not bind to any port between ${requestedPort} and ${port}.`);
+    process.exit(1);
+  }
+
+  const url = `http://127.0.0.1:${port}${path}`;
+  console.log(`\n🌌 Second Brain running at ${url}`);
+  console.log('   Opening in your default browser...\n');
+
+  const startCmd =
+    process.platform === 'win32'
+      ? `start ${url}`
+      : process.platform === 'darwin'
+      ? `open ${url}`
+      : `xdg-open ${url}`;
+  exec(startCmd);
+}
+
+// ==========================================
 // UI COMMAND (OPEN VISUAL DASHBOARD)
 // ==========================================
 program
@@ -222,19 +286,7 @@ program
   .option('-p, --port <number>', 'Port number', '3000')
   .action(async (options) => {
     const port = parseInt(options.port, 10);
-    const app = await buildServer(brain, { logger: false });
-    await app.listen({ port, host: '127.0.0.1' });
-    const url = `http://127.0.0.1:${port}`;
-    console.log(`\n🧠 Second Brain Visual Dashboard running at ${url}`);
-    console.log('   Opening in your default browser...\n');
-
-    const startCmd =
-      process.platform === 'win32'
-        ? `start ${url}`
-        : process.platform === 'darwin'
-        ? `open ${url}`
-        : `xdg-open ${url}`;
-    exec(startCmd);
+    await openOrLaunchServer(port, '/');
   });
 
 // ==========================================
@@ -246,19 +298,7 @@ program
   .option('-p, --port <number>', 'Port number', '3000')
   .action(async (options) => {
     const port = parseInt(options.port, 10);
-    const app = await buildServer(brain, { logger: false });
-    await app.listen({ port, host: '127.0.0.1' });
-    const url = `http://127.0.0.1:${port}/?3d=true`;
-    console.log(`\n🌌 Second Brain 3D Universe running at ${url}`);
-    console.log('   Opening 3D canvas in your browser...\n');
-
-    const startCmd =
-      process.platform === 'win32'
-        ? `start ${url}`
-        : process.platform === 'darwin'
-        ? `open ${url}`
-        : `xdg-open ${url}`;
-    exec(startCmd);
+    await openOrLaunchServer(port, '/?3d=true');
   });
 
 // ==========================================

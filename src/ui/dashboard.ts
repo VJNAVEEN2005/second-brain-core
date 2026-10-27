@@ -293,29 +293,13 @@ export function getDashboardHtml(): string {
           const nodeColor = node.color || typeColors[node.type] || '#1d4ed8';
           const size = node.type === 'Workspace' ? 14 : node.type === 'Project' ? 13 : node.type === 'Checkpoint' ? 11 : 9;
 
-          // Inner Solid Dark Vibrant Glossy Sphere (NO transparency!)
+          // Pure Matte Finish Solid Ball (No ring, no specular lighting glare)
           const geometry = new THREE.SphereGeometry(size, 32, 32);
-          const material = new THREE.MeshPhongMaterial({
+          const material = new THREE.MeshLambertMaterial({
             color: new THREE.Color(nodeColor),
-            emissive: new THREE.Color(nodeColor).multiplyScalar(0.22),
-            specular: new THREE.Color(0xffffff),
-            shininess: 70,
-            transparent: false,
-            opacity: 1.0,
           });
           const sphere = new THREE.Mesh(geometry, material);
           group.add(sphere);
-
-          // Subtle Outer Ring for crisp 3D definition
-          const ringGeo = new THREE.RingGeometry(size * 1.15, size * 1.25, 32);
-          const ringMat = new THREE.MeshBasicMaterial({
-            color: new THREE.Color(nodeColor),
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.45,
-          });
-          const ring = new THREE.Mesh(ringGeo, ringMat);
-          group.add(ring);
 
           // 2D Text Label right underneath node
           const labelText = node.name || node.type || node.id;
@@ -323,7 +307,7 @@ export function getDashboardHtml(): string {
           sprite.color = '#0f172a';
           sprite.textHeight = 4.4;
           sprite.fontWeight = 'bold';
-          sprite.position.y = -size - 6.2;
+          sprite.position.y = -size - 6.0;
           group.add(sprite);
 
           // Count badge right below label
@@ -334,7 +318,7 @@ export function getDashboardHtml(): string {
           badge.color = '#475569';
           badge.textHeight = 3.3;
           badge.fontWeight = 'bold';
-          badge.position.y = -size - 11.8;
+          badge.position.y = -size - 11.5;
           group.add(badge);
 
           return group;
@@ -350,22 +334,17 @@ export function getDashboardHtml(): string {
           inspectNode(node);
         });
 
-      // Lighting & Ambience for Solid Spheres
+      // Soft, Even Diffuse Lighting for Pure Matte Finish (No harsh glare spots)
       const scene = graph3DInstance.scene();
 
-      // Ambient light
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+      // Soft ambient light
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.15);
       scene.add(ambientLight);
 
-      // Key light for crisp highlights
-      const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
-      keyLight.position.set(160, 220, 180);
-      scene.add(keyLight);
-
-      // Fill light from bottom-left
-      const fillLight = new THREE.DirectionalLight(0xffffff, 0.35);
-      fillLight.position.set(-160, -100, -120);
-      scene.add(fillLight);
+      // Subtle diffuse directional light for gentle depth without shiny spots
+      const subtleLight = new THREE.DirectionalLight(0xffffff, 0.25);
+      subtleLight.position.set(80, 120, 100);
+      scene.add(subtleLight);
 
       // Initial Camera Position centered directly at (0, 0, 0)
       graph3DInstance.cameraPosition({ x: 0, y: 0, z: 240 }, { x: 0, y: 0, z: 0 }, 600);

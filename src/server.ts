@@ -36,6 +36,36 @@ export async function buildServer(
     return reply.type('text/html').send(getDashboardHtml());
   });
 
+  // Official Landing Page Website
+  app.get('/website', async (_req, reply) => {
+    const candidatePaths = [
+      path.resolve(__dirname, '../docs/index.html'),
+      path.resolve(__dirname, '../../docs/index.html'),
+      path.resolve(process.cwd(), 'docs/index.html'),
+    ];
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        return reply.type('text/html').send(fs.readFileSync(p, 'utf8'));
+      }
+    }
+    return reply.status(404).send('Landing page not found');
+  });
+
+  // Raw Skill File Endpoint
+  app.get('/skill', async (_req, reply) => {
+    const candidatePaths = [
+      path.resolve(__dirname, '../skills/second-brain/SKILL.md'),
+      path.resolve(__dirname, '../../skills/second-brain/SKILL.md'),
+      path.resolve(process.cwd(), 'skills/second-brain/SKILL.md'),
+    ];
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        return reply.type('text/markdown').send(fs.readFileSync(p, 'utf8'));
+      }
+    }
+    return reply.status(404).send('Skill not found');
+  });
+
   // Serve official logo asset
   app.get('/assets/logo.png', async (_req, reply) => {
     const candidatePaths = [
