@@ -71,19 +71,33 @@ flowchart TD
 
 Second Brain includes a specialized **Agent Skill** (`skills/second-brain/SKILL.md`) that turns any AI assistant into a memory-aware autonomous partner.
 
-### 🚀 Instant One-Click Prompt for Your AI Agent:
-Copy the code below directly into your **Cursor Rules (`.cursorrules`)**, **Claude Project Instructions**, **Custom GPT Instructions**, or **Gemini System Instructions**:
+### 🚀 Copy & Paste Setup Prompt for Your AI Agent:
+Copy this single prompt and give it to any AI agent (**Cursor, Claude, Antigravity, Gemini, ChatGPT**). It will automatically install Second Brain, create the skill file, and resume your work:
 
 ```markdown
-<!-- SECOND BRAIN CORE UNIVERSAL SKILL -->
-You are connected to Second Brain Core. Follow this memory protocol strictly:
-1. At the start of this session, run `brain status` (or call MCP tool `brain_status`) to load the active project, current progress, next task, and architectural decisions.
-2. Never contradict previous architectural decisions recorded in Second Brain.
-3. When we make a major architectural or technical decision, save it:
-   `brain remember "<decision summary>" --tags architecture`.
-4. When our session concludes, when I pause, or when a milestone is completed, create a checkpoint:
-   `brain checkpoint "<summary of progress>" --next "<exact next step>" --progress <0-100>`.
-5. Check my stored profile and executive goals with `brain identity show`.
+<!-- SECOND BRAIN CORE AUTO-SETUP & AGENT SKILL -->
+You are my autonomous AI developer. Integrate Second Brain Core for persistent memory across all sessions:
+
+1. INSTALL SECOND BRAIN:
+   Run: `npm install -g second-brain-core` (or verify it is installed with `brain status`).
+
+2. CREATE THE AGENT SKILL:
+   Create a skill file (in `.cursorrules`, `.claude/skills/second-brain/SKILL.md`, or your agent's skill directory):
+   ```markdown
+   ---
+   name: second-brain
+   description: Universal persistent memory layer for AI agents. Loads project state at start and checkpoints before exit.
+   ---
+   # Second Brain Memory Protocol
+   - AT SESSION START: Always execute `brain status` (or use MCP `brain_status`) to load active project, current progress, next task, and architectural decisions.
+   - DURING WORK: Never contradict previous decisions. When important technical choices are made, run `brain remember "<decision>" --tags architecture`.
+   - AT SESSION END: When we finish or pause, create a checkpoint:
+     `brain checkpoint "<summary>" --next "<next task>" --progress <0-100>`.
+   - FOUNDER PROFILE: Run `brain identity show` to load profile & CEO reasoning mode.
+   ```
+
+3. INITIALIZE NOW:
+   Run `brain status` right now and report back with my active project, progress, and immediate next task to resume work!
 ```
 
 ### 📂 About the `skills/` Directory:
