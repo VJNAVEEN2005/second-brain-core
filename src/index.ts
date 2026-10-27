@@ -12,6 +12,8 @@ export * from './engines/graph.engine.js';
 export * from './graph/adapter.js';
 export * from './graph/memory.adapter.js';
 export * from './graph/neo4j.adapter.js';
+export * from './memory/memory.engine.js';
+export * from './adapters/models/continuation.engine.js';
 export * from './sdk/index.js';
 export * from './server.js';
 

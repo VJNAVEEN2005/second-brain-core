@@ -5,6 +5,8 @@ import { WorkspaceEngine } from '../engines/workspace.engine.js';
 import { ProjectEngine } from '../engines/project.engine.js';
 import { CheckpointEngine } from '../engines/checkpoint.engine.js';
 import { GraphEngine } from '../engines/graph.engine.js';
+import { MemoryEngine } from '../memory/memory.engine.js';
+import { ContinuationEngine } from '../adapters/models/continuation.engine.js';
 import { GraphAdapter } from '../graph/adapter.js';
 import { MemoryGraphAdapter } from '../graph/memory.adapter.js';
 import { Neo4jGraphAdapter, Neo4jConfig } from '../graph/neo4j.adapter.js';
@@ -24,6 +26,11 @@ import {
   GraphRelationship,
   GraphNeighbor,
   GraphContext,
+  MemoryItem,
+  CreateMemoryInput,
+  MemoryQuery,
+  TargetModel,
+  ModelContinuationPackage,
 } from '../types/index.js';
 
 export interface SecondBrainConfig {
@@ -41,6 +48,8 @@ export class SecondBrain {
   public projects: ProjectEngine;
   public checkpoints: CheckpointEngine;
   public graph: GraphEngine;
+  public memory: MemoryEngine;
+  public continuation: ContinuationEngine;
   private defaultSource: string;
 
   constructor(config: SecondBrainConfig = {}) {
@@ -58,6 +67,8 @@ export class SecondBrain {
     this.workspaces = new WorkspaceEngine(this.storage, this.events);
     this.projects = new ProjectEngine(this.storage, this.events);
     this.checkpoints = new CheckpointEngine(this.storage, this.events);
+    this.memory = new MemoryEngine(this.storage, this.events);
+    this.continuation = new ContinuationEngine();
 
     // Graph Engine Initialization
     let graphAdapter: GraphAdapter;
@@ -233,6 +244,17 @@ export class SecondBrain {
   }
 
   // ==========================================
+  // 4-TIER MEMORY API
+  // ==========================================
+  async remember(input: CreateMemoryInput, source?: string): Promise<MemoryItem> {
+    return this.memory.remember(input, source || this.defaultSource);
+  }
+
+  async recall(query: MemoryQuery = {}): Promise<MemoryItem[]> {
+    return this.memory.recall(query);
+  }
+
+  // ==========================================
   // GRAPH API (DIRECT ACCESS)
   // ==========================================
   async createNode(
@@ -328,6 +350,18 @@ export class SecondBrain {
       timestamp: new Date().toISOString(),
       graphContext: graphContextFormatted,
     };
+  }
+
+  // ==========================================
+  // CROSS-MODEL CONTINUATION (PHASE 4)
+  // Claude -> Gemini -> GPT -> Copilot -> Codex
+  // ==========================================
+  async continueFor(
+    targetModel: TargetModel,
+    projectId?: string
+  ): Promise<ModelContinuationPackage> {
+    const resumePackage = await this.resume(projectId);
+    return this.continuation.generateContinuation(targetModel, resumePackage);
   }
 
   // ==========================================

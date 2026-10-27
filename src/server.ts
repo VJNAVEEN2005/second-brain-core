@@ -6,6 +6,7 @@ import {
   CreateProjectInputSchema,
   UpdateProjectInputSchema,
   CreateCheckpointInputSchema,
+  CreateMemoryInputSchema,
 } from './types/index.js';
 
 export async function buildServer(
@@ -184,6 +185,53 @@ export async function buildServer(
   }>('/api/graph/nodes/:id/context', async (req) => {
     const depth = parseInt(req.query.depth || '2', 10);
     return brain.getGraphContext(req.params.id, depth);
+  });
+
+  // ==========================================
+  // 4-TIER MEMORY
+  // ==========================================
+  app.post('/api/memory/remember', async (req, reply) => {
+    const parse = CreateMemoryInputSchema.safeParse(req.body);
+    if (!parse.success) {
+      return reply.status(400).send({ error: parse.error.format() });
+    }
+    const source = (req.headers['x-brain-source'] as string) || 'SYSTEM';
+    const item = await brain.remember(parse.data, source);
+    return reply.status(201).send(item);
+  });
+
+  app.get<{
+    Querystring: {
+      projectId?: string;
+      workspaceId?: string;
+      query?: string;
+      includeCold?: string;
+    };
+  }>('/api/memory/recall', async (req) => {
+    return brain.recall({
+      projectId: req.query.projectId,
+      workspaceId: req.query.workspaceId,
+      query: req.query.query,
+      includeCold: req.query.includeCold === 'true',
+    });
+  });
+
+  // ==========================================
+  // CROSS-MODEL CONTINUATION
+  // ==========================================
+  app.post<{
+    Params: { model: string };
+    Body: { projectId?: string };
+  }>('/api/continuation/:model', async (req, reply) => {
+    const model = req.params.model;
+    const projectId = req.body?.projectId;
+    try {
+      const continuation = await brain.continueFor(model as any, projectId);
+      return reply.status(200).send(continuation);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Continuation generation failed';
+      return reply.status(400).send({ error: msg });
+    }
   });
 
   // ==========================================
