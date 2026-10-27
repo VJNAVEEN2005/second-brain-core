@@ -8,6 +8,10 @@ export * from './engines/workspace.engine.js';
 export * from './engines/project.engine.js';
 export * from './engines/checkpoint.engine.js';
 export * from './engines/event.engine.js';
+export * from './engines/graph.engine.js';
+export * from './graph/adapter.js';
+export * from './graph/memory.adapter.js';
+export * from './graph/neo4j.adapter.js';
 export * from './sdk/index.js';
 export * from './server.js';
 

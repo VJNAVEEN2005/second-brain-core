@@ -128,6 +128,65 @@ export async function buildServer(
   });
 
   // ==========================================
+  // GRAPH API
+  // ==========================================
+  app.post('/api/graph/nodes', async (req, reply) => {
+    const body = req.body as { id: string; type: any; properties?: Record<string, unknown> };
+    if (!body?.id || !body?.type) {
+      return reply.status(400).send({ error: 'id and type are required' });
+    }
+    const node = await brain.createNode(body.id, body.type, body.properties || {});
+    return reply.status(201).send(node);
+  });
+
+  app.get<{ Params: { id: string } }>('/api/graph/nodes/:id', async (req, reply) => {
+    const node = await brain.getNode(req.params.id);
+    if (!node) {
+      return reply.status(404).send({ error: 'Node not found' });
+    }
+    return node;
+  });
+
+  app.post('/api/graph/relate', async (req, reply) => {
+    const body = req.body as {
+      sourceId: string;
+      relType: any;
+      targetId: string;
+      properties?: Record<string, unknown>;
+    };
+    if (!body?.sourceId || !body?.relType || !body?.targetId) {
+      return reply.status(400).send({ error: 'sourceId, relType, and targetId are required' });
+    }
+    const source = (req.headers['x-brain-source'] as string) || 'SYSTEM';
+    const rel = await brain.relate(
+      body.sourceId,
+      body.relType,
+      body.targetId,
+      body.properties || {},
+      source
+    );
+    return reply.status(201).send(rel);
+  });
+
+  app.get<{
+    Params: { id: string };
+    Querystring: { direction?: 'IN' | 'OUT' | 'BOTH'; relType?: any };
+  }>('/api/graph/nodes/:id/neighbors', async (req) => {
+    return brain.getNeighbors(req.params.id, {
+      direction: req.query.direction,
+      relType: req.query.relType,
+    });
+  });
+
+  app.get<{
+    Params: { id: string };
+    Querystring: { depth?: string };
+  }>('/api/graph/nodes/:id/context', async (req) => {
+    const depth = parseInt(req.query.depth || '2', 10);
+    return brain.getGraphContext(req.params.id, depth);
+  });
+
+  // ==========================================
   // EVENTS
   // ==========================================
   app.get<{ Querystring: { projectId?: string; workspaceId?: string } }>(

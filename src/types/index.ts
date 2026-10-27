@@ -1,4 +1,5 @@
 import { z } from 'zod';
+export * from './graph.js';
 
 // ==========================================
 // STOP REASONS
@@ -161,4 +162,5 @@ export interface ResumePackage {
   blockers: string[];
   openQuestions: string[];
   timestamp: string;
+  graphContext?: string;
 }

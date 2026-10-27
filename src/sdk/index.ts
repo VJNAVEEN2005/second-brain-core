@@ -4,6 +4,10 @@ import { EventEngine } from '../engines/event.engine.js';
 import { WorkspaceEngine } from '../engines/workspace.engine.js';
 import { ProjectEngine } from '../engines/project.engine.js';
 import { CheckpointEngine } from '../engines/checkpoint.engine.js';
+import { GraphEngine } from '../engines/graph.engine.js';
+import { GraphAdapter } from '../graph/adapter.js';
+import { MemoryGraphAdapter } from '../graph/memory.adapter.js';
+import { Neo4jGraphAdapter, Neo4jConfig } from '../graph/neo4j.adapter.js';
 import {
   Workspace,
   CreateWorkspaceInput,
@@ -14,11 +18,19 @@ import {
   CreateCheckpointInput,
   ResumePackage,
   BrainEvent,
+  NodeType,
+  RelationshipType,
+  GraphNode,
+  GraphRelationship,
+  GraphNeighbor,
+  GraphContext,
 } from '../types/index.js';
 
 export interface SecondBrainConfig {
   databaseUrl?: string;
   storage?: StorageAdapter;
+  graphAdapter?: GraphAdapter;
+  neo4j?: Neo4jConfig;
   defaultSource?: string;
 }
 
@@ -28,9 +40,11 @@ export class SecondBrain {
   public workspaces: WorkspaceEngine;
   public projects: ProjectEngine;
   public checkpoints: CheckpointEngine;
+  public graph: GraphEngine;
   private defaultSource: string;
 
   constructor(config: SecondBrainConfig = {}) {
+    // Relational/Document Storage
     if (config.storage) {
       this.storage = config.storage;
     } else if (config.databaseUrl) {
@@ -44,6 +58,22 @@ export class SecondBrain {
     this.workspaces = new WorkspaceEngine(this.storage, this.events);
     this.projects = new ProjectEngine(this.storage, this.events);
     this.checkpoints = new CheckpointEngine(this.storage, this.events);
+
+    // Graph Engine Initialization
+    let graphAdapter: GraphAdapter;
+    if (config.graphAdapter) {
+      graphAdapter = config.graphAdapter;
+    } else if (config.neo4j || process.env.NEO4J_URI) {
+      const neo4jConfig: Neo4jConfig = config.neo4j || {
+        uri: process.env.NEO4J_URI || 'bolt://localhost:7687',
+        user: process.env.NEO4J_USER || 'neo4j',
+        password: process.env.NEO4J_PASSWORD || 'password',
+      };
+      graphAdapter = new Neo4jGraphAdapter(neo4jConfig);
+    } else {
+      graphAdapter = new MemoryGraphAdapter();
+    }
+    this.graph = new GraphEngine(graphAdapter, this.events);
   }
 
   // ==========================================
@@ -53,7 +83,16 @@ export class SecondBrain {
     input: CreateWorkspaceInput,
     source?: string
   ): Promise<Workspace> {
-    return this.workspaces.createWorkspace(input, source || this.defaultSource);
+    const src = source || this.defaultSource;
+    const workspace = await this.workspaces.createWorkspace(input, src);
+
+    // Mirror to Graph
+    await this.graph.createNode(workspace.id, 'Workspace', {
+      name: workspace.name,
+      slug: workspace.slug,
+    });
+
+    return workspace;
   }
 
   async getWorkspace(id: string): Promise<Workspace | null> {
@@ -71,7 +110,26 @@ export class SecondBrain {
     input: CreateProjectInput,
     source?: string
   ): Promise<Project> {
-    return this.projects.createProject(input, source || this.defaultSource);
+    const src = source || this.defaultSource;
+    const project = await this.projects.createProject(input, src);
+
+    // Mirror to Graph
+    await this.graph.createNode(project.id, 'Project', {
+      name: project.name,
+      status: project.status,
+      progress: project.progress,
+    });
+
+    // Link: (Workspace)-[:CONTAINS]->(Project)
+    await this.graph.relate(
+      project.workspaceId,
+      'CONTAINS',
+      project.id,
+      {},
+      src
+    );
+
+    return project;
   }
 
   async updateProject(
@@ -79,7 +137,21 @@ export class SecondBrain {
     updates: UpdateProjectInput,
     source?: string
   ): Promise<Project> {
-    return this.projects.updateProject(id, updates, source || this.defaultSource);
+    const src = source || this.defaultSource;
+    const updated = await this.projects.updateProject(id, updates, src);
+
+    // Update node properties in graph if exists
+    const node = await this.graph.getNode(id);
+    if (node) {
+      await this.graph.createNode(id, 'Project', {
+        ...node.properties,
+        ...(updates.name ? { name: updates.name } : {}),
+        ...(updates.status ? { status: updates.status } : {}),
+        ...(updates.progress !== undefined ? { progress: updates.progress } : {}),
+      });
+    }
+
+    return updated;
   }
 
   async getProject(id: string): Promise<Project | null> {
@@ -97,7 +169,59 @@ export class SecondBrain {
     input: CreateCheckpointInput,
     source?: string
   ): Promise<Checkpoint> {
-    return this.checkpoints.createCheckpoint(input, source || this.defaultSource);
+    const src = source || this.defaultSource;
+    const checkpoint = await this.checkpoints.createCheckpoint(input, src);
+
+    // Mirror Checkpoint Node to Graph
+    await this.graph.createNode(checkpoint.checkpointId, 'Checkpoint', {
+      summary: checkpoint.summary,
+      progress: checkpoint.progress,
+      stopReason: checkpoint.stopReason,
+    });
+
+    // Link: (Project)-[:CONTAINS]->(Checkpoint)
+    await this.graph.relate(
+      checkpoint.projectId,
+      'CONTAINS',
+      checkpoint.checkpointId,
+      {},
+      src
+    );
+
+    // Mirror Decisions into Graph & Link: (Checkpoint)-[:CONTAINS]->(Decision)
+    for (let i = 0; i < checkpoint.decisions.length; i++) {
+      const decisionText = checkpoint.decisions[i];
+      const decisionId = `dec_${checkpoint.checkpointId}_${i}`;
+      await this.graph.createNode(decisionId, 'Decision', {
+        summary: decisionText,
+      });
+      await this.graph.relate(
+        checkpoint.checkpointId,
+        'CONTAINS',
+        decisionId,
+        {},
+        src
+      );
+    }
+
+    // Mirror Blockers into Graph & Link: (Checkpoint)-[:BLOCKED_BY]->(Blocker)
+    for (let i = 0; i < checkpoint.blockers.length; i++) {
+      const blockerText = checkpoint.blockers[i];
+      const blockerId = `blk_${checkpoint.checkpointId}_${i}`;
+      await this.graph.createNode(blockerId, 'Task', {
+        summary: blockerText,
+        isBlocker: true,
+      });
+      await this.graph.relate(
+        checkpoint.checkpointId,
+        'BLOCKED_BY',
+        blockerId,
+        {},
+        src
+      );
+    }
+
+    return checkpoint;
   }
 
   async getLatestCheckpoint(projectId: string): Promise<Checkpoint | null> {
@@ -109,7 +233,52 @@ export class SecondBrain {
   }
 
   // ==========================================
-  // RESUME ENGINE (PHASE 1 IMPLEMENTATION)
+  // GRAPH API (DIRECT ACCESS)
+  // ==========================================
+  async createNode(
+    id: string,
+    type: NodeType,
+    properties: Record<string, unknown> = {}
+  ): Promise<GraphNode> {
+    return this.graph.createNode(id, type, properties);
+  }
+
+  async getNode(id: string): Promise<GraphNode | null> {
+    return this.graph.getNode(id);
+  }
+
+  async relate(
+    sourceId: string,
+    relType: RelationshipType,
+    targetId: string,
+    properties: Record<string, unknown> = {},
+    source?: string
+  ): Promise<GraphRelationship> {
+    return this.graph.relate(
+      sourceId,
+      relType,
+      targetId,
+      properties,
+      source || this.defaultSource
+    );
+  }
+
+  async getNeighbors(
+    nodeId: string,
+    options?: {
+      direction?: 'IN' | 'OUT' | 'BOTH';
+      relType?: RelationshipType;
+    }
+  ): Promise<GraphNeighbor[]> {
+    return this.graph.getNeighbors(nodeId, options);
+  }
+
+  async getGraphContext(nodeId: string, depth: number = 2): Promise<GraphContext> {
+    return this.graph.getGraphContext(nodeId, depth);
+  }
+
+  // ==========================================
+  // RESUME ENGINE (COGNITIVE SNAPSHOT + GRAPH CONTEXT)
   // ==========================================
   async resume(projectId?: string): Promise<ResumePackage> {
     let targetProject: Project | null = null;
@@ -117,7 +286,6 @@ export class SecondBrain {
     if (projectId) {
       targetProject = await this.projects.getProject(projectId);
     } else {
-      // Find the most recently active project
       const allProjects = await this.projects.listProjects();
       if (allProjects.length > 0) {
         targetProject = allProjects[allProjects.length - 1];
@@ -131,6 +299,15 @@ export class SecondBrain {
     const latestCheckpoint = await this.checkpoints.getLatestCheckpoint(
       targetProject.id
     );
+
+    // Build Graph Cognitive Context for the prompt
+    let graphContextFormatted: string | undefined;
+    try {
+      const graphContext = await this.graph.getGraphContext(targetProject.id, 2);
+      graphContextFormatted = this.graph.formatContextForPrompt(graphContext);
+    } catch {
+      graphContextFormatted = undefined;
+    }
 
     return {
       project: targetProject.name,
@@ -149,6 +326,7 @@ export class SecondBrain {
       blockers: latestCheckpoint ? latestCheckpoint.blockers : [],
       openQuestions: latestCheckpoint ? latestCheckpoint.openQuestions : [],
       timestamp: new Date().toISOString(),
+      graphContext: graphContextFormatted,
     };
   }
 
