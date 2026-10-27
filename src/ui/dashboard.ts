@@ -152,7 +152,7 @@ export function getDashboardHtml(): string {
         </button>
       </div>
 
-      <!-- Avatar & Title with Edit Button -->
+      <!-- Avatar & Title with Delete Button -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div id="insAvatar" class="w-12 h-12 rounded-full bg-blue-600 shadow-md shadow-blue-200 flex items-center justify-center text-white text-lg font-bold">
@@ -163,9 +163,11 @@ export function getDashboardHtml(): string {
             <p id="insSubtitle" class="text-[11px] text-slate-500 font-medium">Workspace Node</p>
           </div>
         </div>
-        <button onclick="alert('Node details are managed automatically by Second Brain')" class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-[11px] font-semibold flex items-center gap-1 border border-blue-100">
-          <i class="fa-solid fa-pen text-[9px]"></i> Edit
-        </button>
+        <div class="flex items-center gap-1.5">
+          <button onclick="deleteCurrentNode()" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-semibold flex items-center gap-1 border border-rose-100 transition shadow-xs" title="Delete this node">
+            <i class="fa-regular fa-trash-can text-[10px]"></i> Delete
+          </button>
+        </div>
       </div>
 
       <!-- Metadata List -->
@@ -512,6 +514,28 @@ export function getDashboardHtml(): string {
       if (node) {
         focusOnNode(node);
         inspectNode(node);
+      }
+    }
+
+    async function deleteCurrentNode() {
+      const id = document.getElementById('insId').textContent;
+      const title = document.getElementById('insTitle').textContent;
+      if (!confirm('Are you sure you want to delete "' + title + '" (' + id + ') from Second Brain?')) {
+        return;
+      }
+      try {
+        await fetch('/api/graph/nodes/' + encodeURIComponent(id), { method: 'DELETE' });
+        await fetch('/api/projects/' + encodeURIComponent(id), { method: 'DELETE' }).catch(() => {});
+        graphData.nodes = graphData.nodes.filter(n => n.id !== id);
+        graphData.links = graphData.links.filter(l => (l.source.id || l.source) !== id && (l.target.id || l.target) !== id);
+        if (graph3DInstance) {
+          graph3DInstance.graphData(graphData);
+        }
+        updateNodeTypesLegend(graphData);
+        closeInspector();
+        alert('✅ Node deleted successfully!');
+      } catch (err) {
+        alert('Failed to delete node: ' + err.message);
       }
     }
 

@@ -201,6 +201,12 @@ export class SecondBrain {
     return this.projects.getProject(id);
   }
 
+  async deleteProject(id: string): Promise<boolean> {
+    const deleted = await this.storage.deleteProject(id);
+    await this.graph.deleteNode(id);
+    return deleted;
+  }
+
   async listProjects(workspaceId?: string): Promise<Project[]> {
     return this.projects.listProjects(workspaceId);
   }

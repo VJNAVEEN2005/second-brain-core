@@ -123,6 +123,14 @@ export class LocalFileStorageAdapter implements StorageAdapter {
     return { ...updated };
   }
 
+  async deleteProject(id: string): Promise<boolean> {
+    const deleted = this.projects.delete(id);
+    if (deleted) {
+      await this.persistToDisk();
+    }
+    return deleted;
+  }
+
   async listProjects(workspaceId?: string): Promise<Project[]> {
     const all = Array.from(this.projects.values());
     if (workspaceId) {
@@ -140,6 +148,14 @@ export class LocalFileStorageAdapter implements StorageAdapter {
   async getCheckpoint(id: string): Promise<Checkpoint | null> {
     const chk = this.checkpoints.get(id);
     return chk ? { ...chk } : null;
+  }
+
+  async deleteCheckpoint(id: string): Promise<boolean> {
+    const deleted = this.checkpoints.delete(id);
+    if (deleted) {
+      await this.persistToDisk();
+    }
+    return deleted;
   }
 
   async getLatestCheckpoint(projectId: string): Promise<Checkpoint | null> {

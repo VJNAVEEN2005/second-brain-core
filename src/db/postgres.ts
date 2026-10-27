@@ -95,6 +95,14 @@ export class PostgresStorageAdapter implements StorageAdapter {
     return (updated as unknown as Project) || null;
   }
 
+  async deleteProject(id: string): Promise<boolean> {
+    const deleted = await this.db
+      .delete(schema.projects)
+      .where(eq(schema.projects.id, id))
+      .returning();
+    return deleted.length > 0;
+  }
+
   async listProjects(workspaceId?: string): Promise<Project[]> {
     if (workspaceId) {
       const list = await this.db
@@ -133,6 +141,14 @@ export class PostgresStorageAdapter implements StorageAdapter {
       .from(schema.checkpoints)
       .where(eq(schema.checkpoints.checkpointId, id));
     return (found as unknown as Checkpoint) || null;
+  }
+
+  async deleteCheckpoint(id: string): Promise<boolean> {
+    const deleted = await this.db
+      .delete(schema.checkpoints)
+      .where(eq(schema.checkpoints.checkpointId, id))
+      .returning();
+    return deleted.length > 0;
   }
 
   async getLatestCheckpoint(projectId: string): Promise<Checkpoint | null> {

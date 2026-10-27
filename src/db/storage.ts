@@ -11,11 +11,13 @@ export interface StorageAdapter {
   createProject(project: Project): Promise<Project>;
   getProject(id: string): Promise<Project | null>;
   updateProject(id: string, updates: Partial<Project>): Promise<Project | null>;
+  deleteProject(id: string): Promise<boolean>;
   listProjects(workspaceId?: string): Promise<Project[]>;
 
   // Checkpoints
   createCheckpoint(checkpoint: Checkpoint): Promise<Checkpoint>;
   getCheckpoint(id: string): Promise<Checkpoint | null>;
+  deleteCheckpoint(id: string): Promise<boolean>;
   getLatestCheckpoint(projectId: string): Promise<Checkpoint | null>;
   listCheckpoints(projectId: string): Promise<Checkpoint[]>;
 
@@ -76,6 +78,10 @@ export class MemoryStorageAdapter implements StorageAdapter {
     return { ...updated };
   }
 
+  async deleteProject(id: string): Promise<boolean> {
+    return this.projects.delete(id);
+  }
+
   async listProjects(workspaceId?: string): Promise<Project[]> {
     const all = Array.from(this.projects.values());
     if (workspaceId) {
@@ -92,6 +98,10 @@ export class MemoryStorageAdapter implements StorageAdapter {
   async getCheckpoint(id: string): Promise<Checkpoint | null> {
     const chk = this.checkpoints.get(id);
     return chk ? { ...chk } : null;
+  }
+
+  async deleteCheckpoint(id: string): Promise<boolean> {
+    return this.checkpoints.delete(id);
   }
 
   async getLatestCheckpoint(projectId: string): Promise<Checkpoint | null> {

@@ -1,6 +1,6 @@
 {
   "name": "second-brain-core",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "Universal Memory Layer and Cognitive Continuation Substrate for AI Systems & Autonomous Developers",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

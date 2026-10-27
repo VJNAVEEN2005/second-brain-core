@@ -45,6 +45,14 @@ export class GraphEngine {
     return this.adapter.getNode(id);
   }
 
+  async deleteNode(id: string): Promise<boolean> {
+    const deleted = await this.adapter.deleteNode(id);
+    if (deleted && this.eventEngine) {
+      await this.eventEngine.recordEvent('GRAPH_NODE_DELETED', 'GRAPH_ENGINE', { id });
+    }
+    return deleted;
+  }
+
   async findNodesByType(type: NodeType): Promise<GraphNode[]> {
     return this.adapter.findNodesByType(type);
   }

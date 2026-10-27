@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 
 import { exec } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import { SecondBrain } from '../sdk/index.js';
 import { LocalFileStorageAdapter } from '../db/local-file.adapter.js';
 import { LocalFileGraphAdapter } from '../graph/local-file.adapter.js';
@@ -186,6 +193,70 @@ projectCmd
       console.log(`• ${p.name.padEnd(25)} [${p.id}] - ${p.progress}% (${p.status})`);
     }
     console.log('────────────────────────────────────────────────\n');
+  });
+
+projectCmd
+  .command('delete <id>')
+  .description('Delete a project and its graph node')
+  .action(async (id) => {
+    try {
+      const deleted = await brain.deleteProject(id);
+      if (deleted) {
+        console.log(`\n🗑️ Project '${id}' deleted successfully from Second Brain.\n`);
+      } else {
+        console.log(`\nProject '${id}' not found.\n`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Error: ${msg}`);
+    }
+  });
+
+// ==========================================
+// DELETE COMMAND (GENERIC NODE / ENTITY)
+// ==========================================
+program
+  .command('delete <id>')
+  .description('Delete any entity or 3D graph node by ID')
+  .action(async (id) => {
+    try {
+      const graphDeleted = await brain.graph.deleteNode(id);
+      const projDeleted = await brain.deleteProject(id).catch(() => false);
+      if (graphDeleted || projDeleted) {
+        console.log(`\n🗑️ Node/Entity '${id}' deleted successfully from Second Brain.\n`);
+      } else {
+        console.log(`\nEntity '${id}' not found.\n`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Error: ${msg}`);
+    }
+  });
+
+// ==========================================
+// RESET COMMAND (CLEAN LOCAL STORAGE)
+// ==========================================
+program
+  .command('reset')
+  .description('Reset and clean local Second Brain database')
+  .option('-f, --force', 'Force reset without confirmation')
+  .action(async (options) => {
+    if (!options.force) {
+      console.log('\n⚠️ To wipe all local Second Brain memory and start fresh, run:');
+      console.log('   brain reset --force\n');
+      return;
+    }
+    try {
+      const dir = path.join(os.homedir(), '.second-brain');
+      for (const f of ['brain.json', 'graph.json', 'memory.json']) {
+        const p = path.join(dir, f);
+        if (fs.existsSync(p)) fs.unlinkSync(p);
+      }
+      console.log('\n🧹 Second Brain local state has been cleanly reset!\n');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Error: ${msg}`);
+    }
   });
 
 // ==========================================
@@ -424,6 +495,51 @@ program
     }
     await brain.identity.setMode(selected as any);
     console.log(`\n🧠 Second Brain Reasoning Mode set to: 👑 ${selected}\n`);
+  });
+
+// ==========================================
+// SKILL COMMAND (NPM-BUNDLED AGENT SKILL)
+// ==========================================
+const skillCmd = program.command('skill').description('Manage and view Second Brain Agent Skills');
+
+skillCmd
+  .command('show')
+  .description('Print the universal AI agent skill markdown')
+  .action(() => {
+    const candidatePaths = [
+      path.resolve(__dirname, '../skills/second-brain/SKILL.md'),
+      path.resolve(__dirname, '../../skills/second-brain/SKILL.md'),
+      path.resolve(process.cwd(), 'skills/second-brain/SKILL.md'),
+    ];
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        console.log('\n' + fs.readFileSync(p, 'utf8') + '\n');
+        return;
+      }
+    }
+    console.log('\nSecond Brain Universal Agent Skill is bundled with this npm package.\n');
+  });
+
+skillCmd
+  .command('install [target]')
+  .description('Install skill file into local project (.cursorrules, .claude, or custom)')
+  .action((target) => {
+    let dest = target;
+    if (!dest) {
+      dest = path.join(process.cwd(), '.cursorrules');
+    }
+    const skillContent = `<!-- SECOND BRAIN CORE UNIVERSAL SKILL -->
+You are connected to Second Brain Core. Follow this memory protocol strictly:
+1. At the start of this session, run \`brain status\` (or call MCP tool \`brain_status\`) to load the active project, current progress, next task, and architectural decisions.
+2. Never contradict previous architectural decisions recorded in Second Brain.
+3. When we make a major architectural or technical decision, save it:
+   \`brain remember "<decision summary>" --tags architecture\`.
+4. When our session concludes, when I pause, or when a milestone is completed, create a checkpoint:
+   \`brain checkpoint "<summary of progress>" --next "<exact next step>" --progress <0-100>\`.
+5. Check my stored profile and executive goals with \`brain identity show\`.
+`;
+    fs.writeFileSync(dest, skillContent, 'utf8');
+    console.log(`\n✅ Second Brain skill installed to: ${dest}\n`);
   });
 
 // Default action: if no args, show status or help

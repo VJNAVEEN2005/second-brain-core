@@ -148,6 +148,19 @@ export async function buildServer(
     return updated;
   });
 
+  app.delete<{ Params: { id: string } }>('/api/projects/:id', async (req, reply) => {
+    const deleted = await brain.deleteProject(req.params.id);
+    if (!deleted) {
+      return reply.status(404).send({ error: 'Project not found' });
+    }
+    return { success: true, id: req.params.id };
+  });
+
+  app.delete<{ Params: { id: string } }>('/api/graph/nodes/:id', async (req) => {
+    const deleted = await brain.graph.deleteNode(req.params.id);
+    return { success: deleted, id: req.params.id };
+  });
+
   // ==========================================
   // CHECKPOINTS
   // ==========================================
