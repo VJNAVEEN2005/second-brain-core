@@ -12,9 +12,9 @@
 <p align="center">
   <a href="https://github.com/VJNAVEEN2005/second-brain-core"><img src="https://img.shields.io/badge/Status-Active-emerald?style=flat-square" alt="Status"></a>
   <a href="https://www.npmjs.com/package/second-brain-core"><img src="https://img.shields.io/npm/v/second-brain-core?color=crimson&style=flat-square" alt="npm version"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Language-TypeScript-blue?style=flat-square" alt="Language"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Runtime-Node.js%2022+-green?style=flat-square" alt="Runtime"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Storage-100%25%20Local-purple?style=flat-square" alt="Storage"></a>
+  <a href="https://www.npmjs.com/package/second-brain-core"><img src="https://img.shields.io/npm/dm/second-brain-core?style=flat-square&color=blue" alt="npm downloads"></a>
+  <a href="https://github.com/VJNAVEEN2005/second-brain-core/stargazers"><img src="https://img.shields.io/github/stars/VJNAVEEN2005/second-brain-core?style=flat-square&color=gold" alt="GitHub stars"></a>
+  <a href="https://github.com/VJNAVEEN2005/second-brain-core/blob/main/LICENSE"><img src="https://img.shields.io/github/license/VJNAVEEN2005/second-brain-core?style=flat-square&color=purple" alt="License"></a>
   <a href="https://vjnaveen2005.github.io/second-brain-core/"><img src="https://img.shields.io/badge/Website-Live%20Docs-cyan?style=flat-square" alt="Website"></a>
   <a href="#"><img src="https://img.shields.io/badge/Tests-43%20Passing-brightgreen?style=flat-square" alt="Tests"></a>
 </p>
@@ -165,14 +165,27 @@ brain log
 
 ### 3. Model Context Protocol (MCP) Setup
 
-Add Second Brain Core to your **Claude Desktop** or **Cursor** configuration:
+Add Second Brain Core to your **Claude Desktop**, **Cursor**, or any MCP-compatible agent configuration:
 
+#### Option A: Run directly via NPX (Recommended for users)
+```json
+{
+  "mcpServers": {
+    "second-brain": {
+      "command": "npx",
+      "args": ["-y", "second-brain-core", "mcp"]
+    }
+  }
+}
+```
+
+#### Option B: Local Development / Clone
 ```json
 {
   "mcpServers": {
     "second-brain": {
       "command": "node",
-      "args": ["d:/project/Second Brain Core/dist/cli/index.js", "mcp"]
+      "args": ["dist/cli/index.js", "mcp"]
     }
   }
 }
@@ -184,6 +197,19 @@ Now any AI agent can autonomously invoke:
 - `brain_resume`: Pull resume instructions when starting a new session.
 - `brain_remember`: Store long-term knowledge, decisions, or user preferences.
 - `brain_recall`: Query the 4-tier memory by semantic tags or query.
+
+---
+
+## 🔍 Why Second Brain Core vs. Alternatives?
+
+| Feature | Second Brain Core | Mem0 | LangChain Memory | Letta (MemGPT) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Primary Architecture** | Graph + Event-Sourced Checkpoints | Vector Database | Ephemeral Buffer / KV | State Machine Agent |
+| **Model Agnostic Switch** | ✅ Resume across Claude/GPT/Gemini | ⚠️ Requires API Key/Cloud | ❌ Locked to session/chain | ❌ Requires custom agent runtime |
+| **Model Context Protocol (MCP)** | ✅ Native Native 1st-Class Support | ⚠️ Community wrapper | ❌ No | ⚠️ Partial |
+| **100% Local-First & Zero Leakage**| ✅ Local SQLite / Filesystem | ❌ Cloud / External Vector DB | ✅ In-memory | ⚠️ Postgres / Docker Server |
+| **Context Window Consumption** | ⚡ Micro-context (≤ 1000 tokens) | ⚠️ Variable vector chunks | ❌ Huge conversation replay | ⚠️ Large context overhead |
+| **Decision & Architecture Lineage**| ✅ Explicit graph tracking | ❌ Unstructured text chunks | ❌ None | ❌ State prompt only |
 
 ---
 
