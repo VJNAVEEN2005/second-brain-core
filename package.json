@@ -1,6 +1,6 @@
 {
   "name": "second-brain-core",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Universal persistent memory layer and context manager for AI agents, Claude, Cursor, and LLMs via Model Context Protocol (MCP)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

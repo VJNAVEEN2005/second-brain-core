@@ -284,12 +284,35 @@ export function getDashboardHtml(): string {
       const w = container.clientWidth || 800;
       const h = container.clientHeight || 600;
 
+      // Precompute connection counts map for instant lookup (prevents lag & glitches on re-renders)
+      const connectionMap = new Map();
+      if (data && data.links) {
+        for (const l of data.links) {
+          const s = l.source.id || l.source;
+          const t = l.target.id || l.target;
+          connectionMap.set(s, (connectionMap.get(s) || 0) + 1);
+          connectionMap.set(t, (connectionMap.get(t) || 0) + 1);
+        }
+      }
+
       graph3DInstance = ForceGraph3D()(container)
         .width(w)
         .height(h)
         .graphData(data)
         .backgroundColor('#ffffff')
         .showNavInfo(false)
+        .enableNodeDrag(true)
+        .onNodeDrag(() => {
+          const c = graph3DInstance.controls && graph3DInstance.controls();
+          if (c) c.autoRotate = false;
+        })
+        .onNodeDragEnd(() => {
+          const c = graph3DInstance.controls && graph3DInstance.controls();
+          if (c && isAutoRotating) c.autoRotate = true;
+        })
+        .onNodeHover(node => {
+          container.style.cursor = node ? 'pointer' : 'default';
+        })
         .nodeThreeObject(node => {
           const group = new THREE.Group();
           const nodeColor = node.color || typeColors[node.type] || '#1d4ed8';
@@ -312,10 +335,8 @@ export function getDashboardHtml(): string {
           sprite.position.y = -size - 6.0;
           group.add(sprite);
 
-          // Count badge right below label
-          const connectionCount = data.links.filter(
-            l => (l.source.id || l.source) === node.id || (l.target.id || l.target) === node.id
-          ).length;
+          // Count badge right below label (instant map lookup)
+          const connectionCount = connectionMap.get(node.id) || 0;
           const badge = new SpriteText(String(connectionCount));
           badge.color = '#475569';
           badge.textHeight = 3.3;
@@ -348,6 +369,15 @@ export function getDashboardHtml(): string {
       subtleLight.position.set(80, 120, 100);
       scene.add(subtleLight);
 
+      // Native Three.js OrbitControls configuration (Smooth damping, built-in non-conflicting autoRotate)
+      const controls = graph3DInstance.controls && graph3DInstance.controls();
+      if (controls) {
+        controls.autoRotate = isAutoRotating;
+        controls.autoRotateSpeed = 0.8;
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+      }
+
       // Initial Camera Position centered directly at (0, 0, 0)
       graph3DInstance.cameraPosition({ x: 0, y: 0, z: 240 }, { x: 0, y: 0, z: 0 }, 600);
 
@@ -364,32 +394,19 @@ export function getDashboardHtml(): string {
         inspectNode(defaultNode);
       }
 
-      // Auto-Orbit Loop: Kept locked strictly on center (0, 0, 0)
-      let angle = 0;
-      setInterval(() => {
-        if (isAutoRotating && graph3DInstance) {
-          angle += Math.PI / 2400;
-          const dist = 240;
-          graph3DInstance.cameraPosition(
-            {
-              x: dist * Math.sin(angle),
-              y: 15 * Math.sin(angle * 0.7),
-              z: dist * Math.cos(angle)
-            },
-            { x: 0, y: 0, z: 0 } // Keeps camera locked in center!
-          );
-        }
-      }, 25);
-
-      // ResizeObserver to always keep canvas matched to container size
+      // Debounced ResizeObserver to cleanly match container size without layout jitter
+      let resizeTimer = null;
       const handleResize = () => {
         if (!graph3DInstance || !container) return;
-        const curW = container.clientWidth;
-        const curH = container.clientHeight;
-        if (curW > 0 && curH > 0) {
-          graph3DInstance.width(curW);
-          graph3DInstance.height(curH);
-        }
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const curW = container.clientWidth;
+          const curH = container.clientHeight;
+          if (curW > 0 && curH > 0) {
+            graph3DInstance.width(curW);
+            graph3DInstance.height(curH);
+          }
+        }, 60);
       };
 
       if (window.ResizeObserver) {
@@ -429,14 +446,23 @@ export function getDashboardHtml(): string {
 
     function focusOnNode(node) {
       if (!node || !graph3DInstance) return;
+      const controls = graph3DInstance.controls && graph3DInstance.controls();
+      if (controls) {
+        controls.autoRotate = false;
+      }
       const distance = 85;
       const hyp = Math.hypot(node.x || 0, node.y || 0, node.z || 0) || 1;
       const distRatio = 1 + distance / hyp;
       graph3DInstance.cameraPosition(
         { x: (node.x || 0) * distRatio, y: (node.y || 0) * distRatio + 8, z: (node.z || 0) * distRatio },
         node,
-        1200
+        1000
       );
+      setTimeout(() => {
+        if (isAutoRotating && graph3DInstance && graph3DInstance.controls && graph3DInstance.controls()) {
+          graph3DInstance.controls().autoRotate = true;
+        }
+      }, 1050);
     }
 
     function inspectNode(node) {
@@ -545,14 +571,26 @@ export function getDashboardHtml(): string {
 
     function toggleAutoRotate() {
       isAutoRotating = !isAutoRotating;
+      if (graph3DInstance && graph3DInstance.controls && graph3DInstance.controls()) {
+        graph3DInstance.controls().autoRotate = isAutoRotating;
+      }
       const btn = document.getElementById('btnAutoRotate');
-      btn.className = isAutoRotating
-        ? 'px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs'
-        : 'px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs';
+      if (btn) {
+        btn.className = isAutoRotating
+          ? 'px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs'
+          : 'px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs';
+        btn.innerHTML = isAutoRotating
+          ? '<i class="fa-solid fa-pause text-[11px]"></i> Auto-Rotate'
+          : '<i class="fa-solid fa-play text-[11px]"></i> Auto-Rotate';
+      }
     }
 
     function resetCamera() {
       if (graph3DInstance) {
+        const controls = graph3DInstance.controls && graph3DInstance.controls();
+        if (controls) {
+          controls.target.set(0, 0, 0);
+        }
         graph3DInstance.cameraPosition({ x: 0, y: 0, z: 240 }, { x: 0, y: 0, z: 0 }, 800);
       }
     }
@@ -583,7 +621,7 @@ export function getDashboardHtml(): string {
         const filteredNodes = graphData.nodes.filter(n => n.type === type);
         const nodeIds = new Set(filteredNodes.map(n => n.id));
         const filteredLinks = graphData.links.filter(
-          l => nodeIds.has(l.source.id || l.source) || nodeIds.has(l.target.id || l.target)
+          l => nodeIds.has(l.source.id || l.source) && nodeIds.has(l.target.id || l.target)
         );
         graph3DInstance.graphData({ nodes: filteredNodes, links: filteredLinks });
       }
