@@ -22,12 +22,18 @@ const brain = new SecondBrain({
   defaultSource: 'CLI_USER',
 });
 
+let version = '0.1.4';
+try {
+  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
+  if (pkg.version) version = pkg.version;
+} catch {}
+
 const program = new Command();
 
 program
   .name('second-brain')
   .description('Universal Memory Layer for AI Systems - Local Edition')
-  .version('0.1.0');
+  .version(version);
 
 // ==========================================
 // STATUS COMMAND
